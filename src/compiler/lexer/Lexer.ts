@@ -149,7 +149,7 @@ private scan(){
     this.skipComments();
     this.skipWhiteSpace();
     if(this.isAtEnd()) return null;
-    this.start = this.current
+    this.start = this.current;
     const ch = this.advance();
     switch (ch) {
       case "(": return this.makeToken(TokenType.LEFT_PAREN, ch);
