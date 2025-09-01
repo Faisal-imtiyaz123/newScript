@@ -1,3 +1,6 @@
+import type { TypeAnnotation } from "../ast";
+import { TokenType, type Token } from "../lexer/tokens";
+
 /**
  * Grammar (modern core):
  *
@@ -42,6 +45,25 @@
  * functionExpr-> "function" "(" params? ")" block 
  */
 export class Parser{
+  private tokens:Token[]
+  private current=0
+  constructor(tokens:Token[]){
+    this.tokens = tokens
+  }
+  private peek(): Token { return this.tokens[this.current]; }
+  private previous(): Token { return this.tokens[this.current - 1]; }
+  private isAtEnd(): boolean { return this.peek().type === TokenType.EOF; }
+  private advance(): Token { if (!this.isAtEnd()) this.current++; return this.previous(); }
+  private match(type: TokenType): boolean { return !this.isAtEnd() && this.peek().type === type; }
+  private matchTokens(...types: TokenType[]): boolean { for (const t of types) { if (this.match(t)) { this.advance(); return true; } } return false; }
+  private matchWithError(type: TokenType, msg: string): Token { if (this.match(type)) return this.advance(); throw new Error(`${msg} at '${this.peek().lexeme}'`); }
+  private parseTypeAnnotation(): TypeAnnotation {
+  if (this.matchTokens(TokenType.NUMBER_TYPE)) return { type: "NumberType" };
+  if (this.matchTokens(TokenType.STRING_TYPE)) return { type: "StringType" };
+  if (this.matchTokens(TokenType.BOOLEAN_TYPE)) return { type: "BooleanType" };
+  if (this.matchTokens(TokenType.ANY_TYPE)) return { type: "AnyType" };
+  throw new Error("Expected type annotation");
+  }
 
 
 }
