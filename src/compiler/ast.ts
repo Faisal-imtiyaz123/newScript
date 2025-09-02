@@ -98,10 +98,10 @@ export interface PrintNode{
     expression:ASTNode
 }
 export interface IfNode{
-    type:NodeType.PRINT_NODE
+    type:NodeType.IF_NODE
     condition:ASTNode,
     ifBranch:ASTNode,
-    elseBranch:ASTNode
+    elseBranch?:BlockNode
 }
 export interface WhileNode{
     type:NodeType.WHILE_NODE
