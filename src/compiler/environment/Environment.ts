@@ -1,3 +1,4 @@
+import { keywords } from "../lexer/tokens";
 import type { Binding } from "./env.types";
 
 export class Environment{
@@ -15,6 +16,9 @@ export class Environment{
     declare(name:string,value:any,isConstant:boolean,type?:string){
         if(this.values.has(name)){
             throw new Error(`Variable ${name} already declared in this scope`)
+        }
+        if(keywords[name]){
+            throw new Error(`Varaiable ${name} cannot be a keyword`)
         }
         this.values.set(name,{value,isConstant,type})
     }

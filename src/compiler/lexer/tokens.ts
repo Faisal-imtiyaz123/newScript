@@ -97,4 +97,5 @@ export const keywords: Record<string, TokenType> = {
   number: TokenType.NUMBER_TYPE,
   boolean: TokenType.BOOLEAN_TYPE,
   any: TokenType.ANY_TYPE, 
+  be:TokenType.EQUAL
 };

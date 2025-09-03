@@ -141,7 +141,7 @@ private identifier(){
         if(kw==TokenType.TRUE) return this.makeToken(TokenType.TRUE,idStr, true);
         if(kw==TokenType.FALSE) return this.makeToken(TokenType.FALSE,idStr, false);
         if(kw==TokenType.NULL) return this.makeToken(TokenType.NULL,idStr, null);
-        this.makeToken(kw, idStr);
+        return this.makeToken(kw, idStr);
     }
     return this.makeToken(TokenType.IDENTIFIER, idStr);
 }

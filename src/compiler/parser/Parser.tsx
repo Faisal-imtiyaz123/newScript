@@ -1,4 +1,4 @@
-import { NodeType, type ArrayNode, type ASTNode, type BlockNode, type BooleanNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type NullNode, type NumberNode, type ObjectNode, type ObjectProp, type PrintNode, type ProgramNode, type StringNode, type TypeAnnotation, type VarDeclNode, type WhileNode } from "../ast";
+import { NodeType, type ArrayNode, type ASTNode, type BlockNode, type BooleanNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type NullNode, type NumberNode, type ObjectNode, type ObjectProp, type PrintNode, type ProgramNode, type StringNode, type TypeAnnotation, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { TokenType, type Token } from "../lexer/tokens";
 
 /**
@@ -127,20 +127,20 @@ export class Parser{
     return {type:NodeType.FUNCTION_DECL_NODE,name:funcName,params,returnType,body}
   }
   private statement():ASTNode{
-     if (this.match(TokenType.PRINT)) return this.printStmt();
-    if (this.match(TokenType.IF)) return this.ifStmt();
-    if (this.match(TokenType.WHILE)) return this.whileStmt();
-    if (this.match(TokenType.FOR)) return this.forStmt();
-    if (this.match(TokenType.BREAK)) { this.matchWithError(TokenType.SEMICOLON, "Expected ';' after break"); return { type: NodeType.BREAK_NODE}; }
-    if (this.match(TokenType.CONTINUE)) { this.matchWithError(TokenType.SEMICOLON, "Expected ';' after continue"); return { type: NodeType.CONTINUE_NODE }; }
-    if (this.match(TokenType.RETURN)) {
+     if (this.matchTokens(TokenType.PRINT)) return this.printStmt();
+    if (this.matchTokens(TokenType.IF)) return this.ifStmt();
+    if (this.matchTokens(TokenType.WHILE)) return this.whileStmt();
+    if (this.matchTokens(TokenType.FOR)) return this.forStmt();
+    if (this.matchTokens(TokenType.BREAK)) { this.matchWithError(TokenType.SEMICOLON, "Expected ';' after break"); return { type: NodeType.BREAK_NODE}; }
+    if (this.matchTokens(TokenType.CONTINUE)) { this.matchWithError(TokenType.SEMICOLON, "Expected ';' after continue"); return { type: NodeType.CONTINUE_NODE }; }
+    if (this.matchTokens(TokenType.RETURN)) {
       let returnVal: ASTNode | undefined;
-      if (!this.match(TokenType.SEMICOLON)) returnVal = this.expression();
+      if (!this.matchTokens(TokenType.SEMICOLON)) returnVal = this.expression();
       this.matchWithError(TokenType.SEMICOLON, "Expected ';' after return");
       return { type: NodeType.RETURN_NODE, returnVal};
     }
-    if (this.match(TokenType.LEFT_BRACE)) return this.block();
-    if (this.match(TokenType.FUNCTION)) return this.funcDecl(false);
+    if (this.matchTokens(TokenType.LEFT_BRACE)) return this.block();
+    if (this.matchTokens(TokenType.FUNCTION)) return this.funcDecl(false);
     return this.exprStmt();
   }
   private printStmt():PrintNode{
@@ -215,7 +215,7 @@ export class Parser{
     const condition = this.logicOr();
     if(this.matchTokens(TokenType.QUESTION)){
         const trueExpr = this.expression()
-        this.matchWithError(TokenType.SEMICOLON,"Expected semicolon in ternary")
+        this.matchWithError(TokenType.COLON,"Expected semicolon in ternary")
         const elseExpr = this.expression()
         return {type:NodeType.TERNARY,condition,trueBracnh:trueExpr,falseBranch:elseExpr}
     }
@@ -353,24 +353,24 @@ export class Parser{
   }
 
   private primary(): ASTNode {
-    if (this.match(TokenType.FALSE))  return { type: NodeType.BOOLEAN, value: false } as BooleanNode;
-    if (this.match(TokenType.TRUE))   return { type: NodeType.BOOLEAN, value: true } as BooleanNode;
-    if (this.match(TokenType.NULL))   return { type: NodeType.NULL} as NullNode;
+    if (this.matchTokens(TokenType.FALSE))  return { type: NodeType.BOOLEAN, value: false } as BooleanNode;
+    if (this.matchTokens(TokenType.TRUE))   return { type: NodeType.BOOLEAN, value: true } as BooleanNode;
+    if (this.matchTokens(TokenType.NULL))   return { type: NodeType.NULL} as NullNode;
 
-    if (this.match(TokenType.NUMBER)) return { type: NodeType.NUMBER, value: Number(this.previous().literal) } as NumberNode;
-    if (this.match(TokenType.STRING)) return { type: NodeType.STRING, value: String(this.previous().literal) } as StringNode;
-    if (this.match(TokenType.IDENTIFIER)) return { type:NodeType.IDENTIFIER, name: this.previous().lexeme } as IdentifierNode;
+    if (this.matchTokens(TokenType.NUMBER)) return { type: NodeType.NUMBER, value: Number(this.previous().literal) } as NumberNode;
+    if (this.matchTokens(TokenType.STRING)) return { type: NodeType.STRING, value: String(this.previous().literal) } as StringNode;
+    if (this.matchTokens(TokenType.IDENTIFIER)) return { type:NodeType.IDENTIFIER, name: this.previous().lexeme } as IdentifierNode;
 
-    if (this.match(TokenType.LEFT_PAREN)) {
+    if (this.matchTokens(TokenType.LEFT_PAREN)) {
       const expr = this.expression();
       this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after expression");
       return { type: NodeType.GROUPING, expression: expr } as GroupingNode;
     }
 
-    if (this.match(TokenType.LEFT_BRACKET)) return this.array();
-    if (this.match(TokenType.LEFT_BRACE))   return this.object();
+    if (this.matchTokens(TokenType.LEFT_BRACKET)) return this.array();
+    if (this.matchTokens(TokenType.LEFT_BRACE))   return this.object();
 
-    if (this.match(TokenType.FUNCTION)) return this.functionExpr();
+    if (this.matchTokens(TokenType.FUNCTION)) return this.functionExpr();
 
     throw new Error(`Expected expression near '${this.peek().lexeme}'`);
   }
