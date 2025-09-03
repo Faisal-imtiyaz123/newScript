@@ -11,11 +11,10 @@ export default function App() {
     try {
       runSource(code, (s) => setOutput((prev) => [...prev, s]));
     } catch (e: any) {
-      console.log(e)
       setOutput([`Error: ${e.message ?? String(e)}`]);
     }
   };
-
+  console.log(output)
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, height: "100vh", padding: 16 }}>
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>

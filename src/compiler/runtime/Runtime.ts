@@ -7,9 +7,9 @@ export class ReturnSignal{
 }
 export function createGlobalEnv():Environment{
     const env = new Environment()
-    env.declare("print",(v:any)=>{
-        console.log(v);
-        return v;
-    },false)
+    // env.declare("print",(v:any)=>{
+    //     console.log(v);
+    //     return v;
+    // },false)
     return env
 }

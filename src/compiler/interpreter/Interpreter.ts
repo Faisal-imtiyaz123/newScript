@@ -1,5 +1,6 @@
 import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { Environment } from "../environment/Environment";
+import { keywords, TokenType } from "../lexer/tokens";
 import { BreakSignal, ContinueSignal, createGlobalEnv, ReturnSignal } from "../runtime/Runtime";
 import type { FnValue } from "./interpreter.types";
 
@@ -88,11 +89,11 @@ export class Interpreter{
         }
         case NodeType.CONST_DECL_NODE:{
             const n = node as ConstDeclNode
-            const value = n.initializer
+            const value = this.eval(n.initializer)
             const type = n.varType?this.typeToString(n.varType):undefined
             if(type!=="any" && typeof value!==type) throw new Error(`Type error: variable ${n.name.name} is declared as ${type} but got ${typeof value}`)
             this.localEnv.declare(n.name.name,value,true,type)
-            return
+            return;
         }
         case NodeType.EXPR_STATEMENT:
             return this.eval((node as ExprStmtNode).expression);
@@ -215,11 +216,11 @@ export class Interpreter{
         }
         case NodeType.BINARY_NODE: {
         const n = node as BinaryOpNode;
-        if (n.operator === "&&") { 
+        if (n.operator === TokenType.AND_AND) { 
           const l = this.eval(n.left); 
           return this.truthy(l) ? this.eval(n.right) : l; 
         }
-        if (n.operator === "||") { 
+        if (n.operator === TokenType.OR_OR) { 
           const l = this.eval(n.left); 
           return this.truthy(l) ? l : this.eval(n.right); 
         }
@@ -227,17 +228,17 @@ export class Interpreter{
         const l = this.eval(n.left);
         const r = this.eval(n.right);
         switch (n.operator) {
-          case "+": return l + r;
-          case "-": return l - r;
-          case "*": return l * r;
-          case "/": return l / r;
-          case "%": return l % r;
-          case "==": return l === r;
-          case "!=": return l !== r;
-          case ">": return l > r;
-          case "<": return l < r;
-          case ">=": return l >= r;
-          case "<=": return l <= r;
+          case TokenType.PLUS: return l + r;
+          case TokenType.MINUS: return l - r;
+          case TokenType.STAR: return l * r;
+          case TokenType.SLASH: return l / r;
+          case TokenType.PERCENT: return l % r;
+          case TokenType.EQUAL_EQUAL: return l === r;
+          case TokenType.BANG_EQUAL: return l !== r;
+          case TokenType.GREATER: return l > r;
+          case TokenType.LESS: return l < r;
+          case TokenType.GREATER_EQUAL: return l >= r;
+          case TokenType.LESS_EQUAL: return l <= r;
           default: throw new Error(`Unknown operator ${n.operator}`);
         }
       }

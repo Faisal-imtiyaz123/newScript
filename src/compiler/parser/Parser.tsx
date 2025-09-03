@@ -225,7 +225,7 @@ export class Parser{
     let expr:ASTNode = this.logicAnd()
     while(this.matchTokens(TokenType.OR_OR)){
         const right = this.logicAnd()
-        expr = {type:NodeType.BINARY_NODE,operator:"||",left:expr,right}
+        expr = {type:NodeType.BINARY_NODE,operator:TokenType.OR_OR,left:expr,right}
     }
     return expr
   }
@@ -233,14 +233,14 @@ export class Parser{
     let expr:ASTNode = this.equality();
     while(this.matchTokens(TokenType.AND_AND)){
         const right = this.equality();
-        expr = {type:NodeType.BINARY_NODE,operator:"&&",left:expr,right}
+        expr = {type:NodeType.BINARY_NODE,operator:TokenType.AND_AND,left:expr,right}
     }
     return expr
   }
   private equality():ASTNode{
     let expr:ASTNode = this.comparison();
     while(this.matchTokens(TokenType.EQUAL_EQUAL,TokenType.BANG_EQUAL)){
-        const op = this.previous().lexeme
+        const op = this.previous().type
         const right = this.comparison();
         expr = {type:NodeType.BINARY_NODE,operator:op,left:expr,right}
     }
@@ -249,9 +249,9 @@ export class Parser{
   private comparison(): ASTNode {
     let expr:ASTNode = this.term();
     while (this.matchTokens(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
-      const op = this.previous().lexeme;
+      const op = this.previous().type;
       const right = this.term();
-      expr = { type: NodeType.BINARY_NODE, operator: op, left: expr, right };
+      expr = { type: NodeType.BINARY_NODE, operator:op, left: expr, right };
     }
     return expr;
   }
@@ -259,7 +259,7 @@ export class Parser{
   private term(): ASTNode {
     let expr = this.factor();
     while (this.matchTokens(TokenType.PLUS, TokenType.MINUS)) {
-      const op = this.previous().lexeme;
+      const op = this.previous().type;
       const right = this.factor();
       expr = { type: NodeType.BINARY_NODE, operator: op, left: expr, right };
     }
@@ -269,24 +269,24 @@ export class Parser{
   private factor(): ASTNode {
     let expr = this.unary();
     while (this.matchTokens(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)) {
-      const op = this.previous().lexeme;
+      const op = this.previous().type;
       const right = this.unary();
-      expr = { type: NodeType.BINARY_NODE, operator: op, left: expr, right };
+      expr = { type: NodeType.BINARY_NODE, operator:op, left: expr, right };
     }
     return expr;
   }
    private unary(): ASTNode {
     if (this.matchTokens(TokenType.BANG, TokenType.MINUS, TokenType.PLUS_PLUS, TokenType.MINUS_MINUS)) {
-      const op = this.previous().lexeme;
+      const op = this.previous().type;
       const right = this.unary();
-      return { type: NodeType.UNARY_NODE, operator: op, right };
+      return { type: NodeType.UNARY_NODE, operator:op, right };
     }
     return this.postfix();
   }
   private postfix(): ASTNode {
     let expr = this.callOrMember();
     while (this.matchTokens(TokenType.PLUS_PLUS, TokenType.MINUS_MINUS)) {
-      const op = this.previous().lexeme;
+      const op = this.previous().type;
       expr = { type: NodeType.POST_FIX_NODE, operator: op, operand: expr };
     }
     return expr;
@@ -294,17 +294,17 @@ export class Parser{
   private callOrMember(): ASTNode {
     let expr = this.primary();
     while (true) {
-      if (this.match(TokenType.LEFT_PAREN)) {
+      if (this.matchTokens(TokenType.LEFT_PAREN)) {
         const args: ASTNode[] = [];
         if (!this.match(TokenType.RIGHT_PAREN)) {
           do { args.push(this.expression()); } while (this.matchTokens(TokenType.COMMA));
         }
         this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after arguments");
         expr = { type: NodeType.CALL_NODE, callee: expr, args };
-      } else if (this.match(TokenType.DOT)) {
+      } else if (this.matchTokens(TokenType.DOT)) {
         const name = this.matchWithError(TokenType.IDENTIFIER, "Expected property name after '.'").lexeme;
         expr = { type: NodeType.MEMBER, object: expr, property: { type: NodeType.IDENTIFIER, name } };
-      } else if (this.match(TokenType.LEFT_BRACKET)) {
+      } else if (this.matchTokens(TokenType.LEFT_BRACKET)) {
         const index = this.expression();
         this.matchWithError(TokenType.RIGHT_BRACKET, "Expected ']' after index");
         expr = { type: NodeType.INDEX, object: expr, index };

@@ -1,3 +1,4 @@
+import type { TokenType } from "../lexer/tokens";
 
 export type ASTNode =
   | ProgramNode      // The top-level program container
@@ -145,18 +146,18 @@ export interface AssignmentNode{
 }
 export interface BinaryOpNode{
     type:NodeType.BINARY_NODE,
-    operator:string,
+    operator:TokenType,
     left:ASTNode,
     right:ASTNode
 }
 export interface UnaryOpNode{
     type:NodeType.UNARY_NODE,
-    operator:string,
+    operator:TokenType,
     right:ASTNode
 }
 export interface PostfixNode{
     type:NodeType.POST_FIX_NODE,
-    operator:string,
+    operator:TokenType,
     operand:ASTNode
 }
 export interface UpdateExpressionNode{
