@@ -1,4 +1,4 @@
-import { NodeType, type ASTNode, type BlockNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type IdentifierNode, type IfNode, type PrintNode, type ProgramNode, type TypeAnnotation, type VarDeclNode, type WhileNode } from "../ast";
+import { NodeType, type ArrayNode, type ASTNode, type BlockNode, type BooleanNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type NullNode, type NumberNode, type ObjectNode, type ObjectProp, type PrintNode, type ProgramNode, type StringNode, type TypeAnnotation, type VarDeclNode, type WhileNode } from "../ast";
 import { TokenType, type Token } from "../lexer/tokens";
 
 /**
@@ -140,7 +140,7 @@ export class Parser{
       return { type: NodeType.RETURN_NODE, returnVal};
     }
     if (this.match(TokenType.LEFT_BRACE)) return this.block();
-    if (this.match(TokenType.FUNCTION)) return this.funDecl(false);
+    if (this.match(TokenType.FUNCTION)) return this.funcDecl(false);
     return this.exprStmt();
   }
   private printStmt():PrintNode{
@@ -210,5 +210,168 @@ export class Parser{
         }
     }
     return left
+  }
+  private ternary():ASTNode{
+    const condition = this.logicOr();
+    if(this.matchTokens(TokenType.QUESTION)){
+        const trueExpr = this.expression()
+        this.matchWithError(TokenType.SEMICOLON,"Expected semicolon in ternary")
+        const elseExpr = this.expression()
+        return {type:NodeType.TERNARY,condition,trueBracnh:trueExpr,falseBranch:elseExpr}
+    }
+    return condition
+  }
+  private logicOr():ASTNode{
+    let expr:ASTNode = this.logicAnd()
+    while(this.matchTokens(TokenType.OR_OR)){
+        const right = this.logicAnd()
+        expr = {type:NodeType.BINARY_NODE,operator:"||",left:expr,right}
+    }
+    return expr
+  }
+  private logicAnd():ASTNode{
+    let expr:ASTNode = this.equality();
+    while(this.matchTokens(TokenType.AND_AND)){
+        const right = this.equality();
+        expr = {type:NodeType.BINARY_NODE,operator:"&&",left:expr,right}
+    }
+    return expr
+  }
+  private equality():ASTNode{
+    let expr:ASTNode = this.comparison();
+    while(this.matchTokens(TokenType.EQUAL_EQUAL,TokenType.BANG_EQUAL)){
+        const op = this.previous().lexeme
+        const right = this.comparison();
+        expr = {type:NodeType.BINARY_NODE,operator:op,left:expr,right}
+    }
+    return expr
+  }
+  private comparison(): ASTNode {
+    let expr:ASTNode = this.term();
+    while (this.matchTokens(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+      const op = this.previous().lexeme;
+      const right = this.term();
+      expr = { type: NodeType.BINARY_NODE, operator: op, left: expr, right };
+    }
+    return expr;
+  }
+
+  private term(): ASTNode {
+    let expr = this.factor();
+    while (this.matchTokens(TokenType.PLUS, TokenType.MINUS)) {
+      const op = this.previous().lexeme;
+      const right = this.factor();
+      expr = { type: NodeType.BINARY_NODE, operator: op, left: expr, right };
+    }
+    return expr;
+  }
+
+  private factor(): ASTNode {
+    let expr = this.unary();
+    while (this.matchTokens(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)) {
+      const op = this.previous().lexeme;
+      const right = this.unary();
+      expr = { type: NodeType.BINARY_NODE, operator: op, left: expr, right };
+    }
+    return expr;
+  }
+   private unary(): ASTNode {
+    if (this.matchTokens(TokenType.BANG, TokenType.MINUS, TokenType.PLUS_PLUS, TokenType.MINUS_MINUS)) {
+      const op = this.previous().lexeme;
+      const right = this.unary();
+      return { type: NodeType.UNARY_NODE, operator: op, right };
+    }
+    return this.postfix();
+  }
+  private postfix(): ASTNode {
+    let expr = this.callOrMember();
+    while (this.matchTokens(TokenType.PLUS_PLUS, TokenType.MINUS_MINUS)) {
+      const op = this.previous().lexeme;
+      expr = { type: NodeType.POST_FIX_NODE, operator: op, operand: expr };
+    }
+    return expr;
+  }
+  private callOrMember(): ASTNode {
+    let expr = this.primary();
+    while (true) {
+      if (this.match(TokenType.LEFT_PAREN)) {
+        const args: ASTNode[] = [];
+        if (!this.match(TokenType.RIGHT_PAREN)) {
+          do { args.push(this.expression()); } while (this.matchTokens(TokenType.COMMA));
+        }
+        this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after arguments");
+        expr = { type: NodeType.CALL_NODE, callee: expr, args };
+      } else if (this.match(TokenType.DOT)) {
+        const name = this.matchWithError(TokenType.IDENTIFIER, "Expected property name after '.'").lexeme;
+        expr = { type: NodeType.MEMBER, object: expr, property: { type: NodeType.IDENTIFIER, name } };
+      } else if (this.match(TokenType.LEFT_BRACKET)) {
+        const index = this.expression();
+        this.matchWithError(TokenType.RIGHT_BRACKET, "Expected ']' after index");
+        expr = { type: NodeType.INDEX, object: expr, index };
+      } else break;
+    }
+    return expr;
+  }
+  private array(): ArrayNode {
+    const elements: ASTNode[] = [];
+    if (!this.match(TokenType.RIGHT_BRACKET)) {
+      do { elements.push(this.expression()); } while (this.match(TokenType.COMMA));
+    }
+    this.matchWithError(TokenType.RIGHT_BRACKET, "Expected ']' after array");
+    return { type:NodeType.ARRAY, elements };
+  }
+
+  private object(): ObjectNode {
+    const properties: ObjectProp[] = [];
+    if (!this.match(TokenType.RIGHT_BRACE)) {
+      do {
+        const keyTok = this.matchWithError(TokenType.IDENTIFIER, "Expected object key");
+        this.matchWithError(TokenType.COLON, "Expected ':' after key");
+        const value = this.expression();
+        properties.push({ key: keyTok.lexeme, value });
+      } while (this.match(TokenType.COMMA));
+    }
+    this.matchWithError(TokenType.RIGHT_BRACE, "Expected '}' after object");
+    return { type: NodeType.OBJECT, properties };
+  }
+
+  private functionExpr(): FunctionDeclNode {
+    // current token is FUNCTION (already matched by caller)
+    this.matchWithError(TokenType.LEFT_PAREN, "Expected '(' after function");
+    const params: {id:IdentifierNode,paramType?:TypeAnnotation}[] = [];
+    if (!this.match(TokenType.RIGHT_PAREN)) {
+      do {
+        const p = this.matchWithError(TokenType.IDENTIFIER, "Expected parameter name");
+        let paramType: TypeAnnotation | undefined;
+        if(this.match(TokenType.COLON)) paramType = this.parseTypeAnnotation();
+        params.push({ id: { type: NodeType.IDENTIFIER, name: p.lexeme }, paramType });
+      } while (this.match(TokenType.COMMA));
+    }
+    this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after parameters");
+    const body = this.block();
+    return { type: NodeType.FUNCTION_DECL_NODE, params, body };
+  }
+
+  private primary(): ASTNode {
+    if (this.match(TokenType.FALSE))  return { type: NodeType.BOOLEAN, value: false } as BooleanNode;
+    if (this.match(TokenType.TRUE))   return { type: NodeType.BOOLEAN, value: true } as BooleanNode;
+    if (this.match(TokenType.NULL))   return { type: NodeType.NULL} as NullNode;
+
+    if (this.match(TokenType.NUMBER)) return { type: NodeType.NUMBER, value: Number(this.previous().literal) } as NumberNode;
+    if (this.match(TokenType.STRING)) return { type: NodeType.STRING, value: String(this.previous().literal) } as StringNode;
+    if (this.match(TokenType.IDENTIFIER)) return { type:NodeType.IDENTIFIER, name: this.previous().lexeme } as IdentifierNode;
+
+    if (this.match(TokenType.LEFT_PAREN)) {
+      const expr = this.expression();
+      this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after expression");
+      return { type: NodeType.GROUPING, expression: expr } as GroupingNode;
+    }
+
+    if (this.match(TokenType.LEFT_BRACKET)) return this.array();
+    if (this.match(TokenType.LEFT_BRACE))   return this.object();
+
+    if (this.match(TokenType.FUNCTION)) return this.functionExpr();
+
+    throw new Error(`Expected expression near '${this.peek().lexeme}'`);
   }
 }

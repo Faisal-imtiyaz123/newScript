@@ -135,7 +135,7 @@ export interface FunctionDeclNode{
 export interface CallNode{
     type:NodeType.CALL_NODE
     callee:ASTNode // this being called
-    args:ASTNode // args being passed
+    args:ASTNode[] // args being passed
 }
 export interface AssignmentNode{
     type:NodeType.ASSIGNMENT_NODE
@@ -181,7 +181,7 @@ export interface StringNode{
 }
 export interface BooleanNode{
     type:NodeType.BOOLEAN
-    value:string
+    value:boolean
 }
 export interface NullNode{
     type:NodeType.NULL
