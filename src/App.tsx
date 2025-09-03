@@ -1,7 +1,8 @@
-import {  useState } from "react";
+import { useState } from "react";
 import { runSource } from "./compiler";
 
 const SAMPLE = ``;
+
 export default function App() {
   const [code, setCode] = useState(SAMPLE);
   const [output, setOutput] = useState<string[]>([]);
@@ -14,22 +15,72 @@ export default function App() {
       setOutput([`Error: ${e.message ?? String(e)}`]);
     }
   };
-  console.log(output)
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, height: "100vh", padding: 16 }}>
-      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <h2>newScript+ — editor</h2>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        width: "100vw",
+        height: "100vh",
+        gap: 16,
+        padding: 16,
+        boxSizing: "border-box",
+      }}
+    >
+      {/* Editor */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <h2 style={{ margin: 0, marginBottom: 8 }}>newScript Editor</h2>
         <textarea
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          style={{ flex: 1, fontFamily: "monospace", fontSize: 14, padding: 12 }}
+          style={{
+            flex: 1,
+            fontFamily: "monospace",
+            fontSize: 14,
+            padding: 12,
+            resize: "none",
+          }}
         />
-        <button onClick={handleRun} style={{ marginTop: 8, padding: "8px 12px" }}>
-          Run & Visualize AST
+        <button
+          onClick={handleRun}
+          style={{
+            marginTop: 8,
+            padding: "8px 12px",
+            alignSelf: "flex-start",
+            width:"100%"
+          }}
+        >
+          Run
         </button>
-        <h3>Output</h3>
-        <pre style={{ background: "#111", color: "#0f0", padding: 12, minHeight: 160, whiteSpace: "pre-wrap" }}>
-{output.join("\n")}
+      </div>
+
+      {/* Output */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <h3 style={{ margin: 0, marginBottom: 8 }}>Output</h3>
+        <pre
+          style={{
+            flex: 1,
+            background: "#111",
+            color: "#0f0",
+            padding: 12,
+            whiteSpace: "pre-wrap",
+            overflow: "auto",
+          }}
+        >
+          {output.join("\n")}
         </pre>
       </div>
     </div>
