@@ -43,9 +43,8 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", gap: 16, padding: 16, height: "100vh", boxSizing: "border-box" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0,position:"relative" }}>
         <h2 style={{ margin: 0, marginBottom: 8 }}>newScript Editor</h2>
-
         <div className="editor-container">
           <pre
             ref={preRef}
@@ -62,18 +61,16 @@ export default function App() {
             onScroll={onScroll}
           />
         </div>
-
         <button
           onClick={handleRun}
-          style={{ marginTop: 8, padding: "8px 12px", alignSelf: "flex-start" }}
+          style={{ padding: "8px 12px",right:5, top:40 ,position:"absolute",zIndex:4,backgroundColor:"green",color:"white",cursor:"pointer"}}
         >
           Run
         </button>
       </div>
-
-      <div style={{ width: 420, display: "flex", flexDirection: "column" }}>
-        <h3 style={{ margin: 0, marginBottom: 8 }}>Output</h3>
-        <pre style={{ flex: 1, background: "#111", color: "#0f0", padding: 12, overflow: "auto" }}>
+      <div style={{ width: 430, display: "flex", flexDirection: "column"}}>
+        <h2 style={{ margin: 0, marginBottom: 8 }}>Output</h2>
+        <pre style={{ flex:1,margin:0, background: "#111", color: "#0f0", overflow: "auto" ,padding:10}}>
           {output.join("\n")}
         </pre>
       </div>

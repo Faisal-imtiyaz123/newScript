@@ -90,7 +90,6 @@ function tokenClass(type: TokenType | "STRING_ERROR"): string {
     case TokenType.AND_AND:
     case TokenType.OR_OR:
       return "tok-operator";
-
     default:
       return "tok-default";
   }
@@ -102,7 +101,6 @@ export function highlightCode(src: string): string {
   const lexer = new Lexer(src);
   let out = "";
   let pos = 0;
-
   try {
     const tokens = lexer.tokenize();
     for (const t of tokens) {
@@ -126,7 +124,6 @@ export function highlightCode(src: string): string {
       out += escapeHtml(src.slice(pos));
     }
   }
-
   if (!out.endsWith("\n")) out += "\n";
   return out;
 }

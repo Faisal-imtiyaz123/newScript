@@ -94,7 +94,6 @@ private skipComments(){
 private string() {
   let str = "";
   let unterminated = false;
-
   while (!this.isAtEnd() && this.peek() !== '"') {
     const ch = this.advance();
     if (ch === "\\") {
@@ -109,14 +108,12 @@ private string() {
       str += ch;
     }
   }
-
   if (this.isAtEnd() || this.peek() !== '"') {
     // Unterminated string: just mark it, don't throw
     unterminated = true;
   } else {
     this.advance(); // consume closing quote
   }
-
   // Attach unterminated flag to literal so highlighter can style differently
   return this.makeToken(TokenType.STRING, str, { value: str, unterminated });
 }
