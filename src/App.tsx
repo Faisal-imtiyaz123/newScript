@@ -5,8 +5,8 @@ import { highlightCode } from "./highlighter/highlighter";
 import "./highlighter/styles.css";
 
 const SAMPLE = `// try typing
-let x = 10;
-print(x);
+loyal x = 10;
+say(x);
 `;
 
 export default function App() {
