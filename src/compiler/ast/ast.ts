@@ -30,6 +30,8 @@ export type ASTNode =
   | MemberNode       // property access: obj.prop
   | IndexNode        // index access: obj[expr]
   | PostfixNode      // postfix increment/decrement: expr++, expr--
+  | ImportNode
+  | ExportNode
 
 export enum NodeType{
     PROGRAM="Program",
@@ -61,7 +63,9 @@ export enum NodeType{
     ARRAY="ArrayNode",
     OBJECT="ObjectNode",
     MEMBER="MemberNode",
-    INDEX="IndexNode"
+    INDEX="IndexNode",
+    IMPORT_NODE = "ImportNode",
+    EXPORT_NODE = "ExportNode",
 }
 export type TypeAnnotation =
   | { type: "NumberType" }
@@ -220,4 +224,21 @@ export interface IndexNode {
   type: NodeType.INDEX;
   object: ASTNode;                 // object/array being accessed
   index: ASTNode;                  // index/key expression
+}
+export interface ImportSpecifier {
+  imported: string;  // the actual export name in the module
+  local: string;     // the variable name in current file
+}
+export interface ImportNode {
+  type: NodeType.IMPORT_NODE;
+  specifiers: ImportSpecifier[];
+  source: StringNode;
+}
+
+export interface ExportNode {
+  type: NodeType.EXPORT_NODE;
+  declaration?: ASTNode; // function/var/const
+  name?: IdentifierNode; // for `export IDENT;`
+  specifiers?: ImportSpecifier[]; // for `export { foo as bar }`
+  isDefault?: boolean;           // for `export default ...`
 }

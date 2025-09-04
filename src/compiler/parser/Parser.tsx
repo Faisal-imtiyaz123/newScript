@@ -1,11 +1,13 @@
-import { NodeType, type ArrayNode, type ASTNode, type BlockNode, type BooleanNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type NullNode, type NumberNode, type ObjectNode, type ObjectProp, type PrintNode, type ProgramNode, type StringNode, type TypeAnnotation, type VarDeclNode, type WhileNode } from "../ast/ast";
+import { NodeType, type ArrayNode, type ASTNode, type BlockNode, type BooleanNode, type ConstDeclNode, type ExportNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type ImportNode, type ImportSpecifier, type NullNode, type NumberNode, type ObjectNode, type ObjectProp, type PrintNode, type ProgramNode, type StringNode, type TypeAnnotation, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { TokenType, type Token } from "../lexer/tokens";
 
 /**
  * Grammar (modern core):
  *
  * program      -> declaration* EOF
- * declaration  -> varDecl | constDecl | funDecl | statement
+ * declaration  -> varDecl | constDecl | funDecl | importDecl | exportDecl | statement
+ * importDecl   -> "import" IDENT "from" STRING ";"
+ * exportDecl   -> "export" (funDecl | varDecl | constDecl | IDENT ";")
  * varDecl      -> ("var" | "let") IDENT ("=" expression)? ";"
  * constDecl    -> "const" IDENT "=" expression ";"
  * funDecl      -> "function" IDENT? "(" params? ")" block
@@ -83,6 +85,8 @@ export class Parser{
     if(this.matchTokens(TokenType.LET))return this.varDecl("let");
     if(this.matchTokens(TokenType.CONST))return this.constDecl();
     if(this.matchTokens(TokenType.FUNCTION))return this.funcDecl(true);
+    if(this.matchTokens(TokenType.IMPORT))return this.importDecl();
+    if(this.matchTokens(TokenType.EXPORT))return this.exportDecl();
     return this.statement();
   }
   private varDecl(kind:"let"|"var"):VarDeclNode{
@@ -122,10 +126,117 @@ export class Parser{
     }
     this.matchWithError(TokenType.RIGHT_PAREN,"Expected Right Paren")
     let returnType:TypeAnnotation|undefined
-    if(this.matchTokens(TokenType.COMMA))returnType = this.parseTypeAnnotation()
+    if(this.matchTokens(TokenType.COLON))returnType = this.parseTypeAnnotation()
     const body = this.block();
     return {type:NodeType.FUNCTION_DECL_NODE,name:funcName,params,returnType,body}
   }
+private importDecl(): ImportNode {
+  const specifiers: ImportSpecifier[] = [];
+
+  if (this.match(TokenType.IDENTIFIER)) {
+    // default import: import foo from "./mod";
+    const nameTok = this.advance();
+    specifiers.push({ imported: "default", local: nameTok.lexeme });
+  }
+  else if (this.matchTokens(TokenType.STAR)) {
+    // namespace import: import * as ns from "./mod";
+    this.matchWithError(TokenType.AS, "Expected 'as' after '*'");
+    const localTok = this.matchWithError(TokenType.IDENTIFIER, "Expected local name after 'as'");
+    specifiers.push({ imported: "*", local: localTok.lexeme });
+  }
+  else if (this.matchTokens(TokenType.LEFT_BRACE)) {
+    // named imports: import { foo, bar as baz } from "./mod";
+    do {
+      const importedTok = this.matchWithError(TokenType.IDENTIFIER, "Expected identifier in import list");
+      let localName = importedTok.lexeme;
+
+      if (this.match(TokenType.AS)) {
+        const localTok = this.matchWithError(TokenType.IDENTIFIER, "Expected local name after 'as'");
+        localName = localTok.lexeme;
+      }
+
+      specifiers.push({ imported: importedTok.lexeme, local: localName });
+    } while (this.matchTokens(TokenType.COMMA));
+
+    this.matchWithError(TokenType.RIGHT_BRACE, "Expected '}' after import list");
+  }
+  else {
+    throw new Error("Expected identifier, '*', or '{' after import");
+  }
+
+  this.matchWithError(TokenType.FROM, "Expected 'from' after import specifiers");
+  const sourceTok = this.matchWithError(TokenType.STRING, "Expected string after 'from'");
+  this.matchWithError(TokenType.SEMICOLON, "Expected ';' after import");
+
+  return {
+    type: NodeType.IMPORT_NODE,
+    specifiers,
+    source: { type: NodeType.STRING, value: String(sourceTok.literal) }
+  };
+}
+
+
+private exportDecl(): ExportNode {
+  // export default ...
+  if (this.matchTokens(TokenType.DEFAULT)) {
+    if (this.matchTokens(TokenType.FUNCTION)) {
+      const decl = this.funcDecl(true);
+      return { type: NodeType.EXPORT_NODE, declaration: decl, isDefault: true };
+    }
+    // could be identifier, number, string, etc.
+    const value = this.expression();
+    this.matchWithError(TokenType.SEMICOLON, "Expected ';' after default export");
+    return { type: NodeType.EXPORT_NODE, declaration: value, isDefault: true };
+  }
+
+  // export { foo, bar as baz };
+  if (this.matchTokens(TokenType.LEFT_BRACE)) {
+    const specifiers: ImportSpecifier[] = [];
+    do {
+      const exportedTok = this.matchWithError(TokenType.IDENTIFIER, "Expected identifier in export list");
+      let localName = exportedTok.lexeme;
+
+      if (this.match(TokenType.AS)) {
+        const localTok = this.matchWithError(TokenType.IDENTIFIER, "Expected local name after 'as'");
+        localName = localTok.lexeme;
+      }
+
+      specifiers.push({ imported: exportedTok.lexeme, local: localName });
+    } while (this.matchTokens(TokenType.COMMA));
+
+    this.matchWithError(TokenType.RIGHT_BRACE, "Expected '}' after export list");
+    this.matchWithError(TokenType.SEMICOLON, "Expected ';' after export");
+
+    return { type: NodeType.EXPORT_NODE, specifiers };
+  }
+
+  // export function/var/let/const
+  if (this.matchTokens(TokenType.FUNCTION)) {
+    const decl = this.funcDecl(true);
+    return { type: NodeType.EXPORT_NODE, declaration: decl };
+  }
+  if (this.matchTokens(TokenType.VAR)) {
+    const decl = this.varDecl("var");
+    return { type: NodeType.EXPORT_NODE, declaration: decl };
+  }
+  if (this.matchTokens(TokenType.LET)) {
+    const decl = this.varDecl("let");
+    return { type: NodeType.EXPORT_NODE, declaration: decl };
+  }
+  if (this.matchTokens(TokenType.CONST)) {
+    const decl = this.constDecl();
+    return { type: NodeType.EXPORT_NODE, declaration: decl };
+  }
+
+  // export IDENT;
+  if (this.matchTokens(TokenType.IDENTIFIER)) {
+    this.matchWithError(TokenType.SEMICOLON, "Expected ';' after identifier export");
+    return { type: NodeType.EXPORT_NODE, name: { type: NodeType.IDENTIFIER, name: this.previous().lexeme } };
+  }
+
+  throw new Error("Invalid export declaration");
+}
+
   private statement():ASTNode{
      if (this.matchTokens(TokenType.PRINT)) return this.printStmt();
     if (this.matchTokens(TokenType.IF)) return this.ifStmt();

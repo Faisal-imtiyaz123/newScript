@@ -63,7 +63,12 @@ export enum TokenType {
   NUMBER_TYPE = "NUMBER_TYPE",
   BOOLEAN_TYPE = "BOOLEAN_TYPE",
   ANY_TYPE = "ANY_TYPE",
-
+  //import export
+  IMPORT = "IMPORT",
+  EXPORT="EXPORT",
+  FROM="FROM",
+  AS="AS",
+  DEFAULT="DEFAULT",
   // End of file
   EOF = "EOF",
 }
@@ -78,6 +83,11 @@ export type Token = {
 };
 
 export const keywords: Record<string, TokenType> = {
+  import:TokenType.IMPORT,
+  from:TokenType.FROM,
+  default:TokenType.DEFAULT,
+  as:TokenType.AS,
+  export:TokenType.EXPORT,
   var: TokenType.VAR,
   let: TokenType.LET,
   loyal: TokenType.CONST,

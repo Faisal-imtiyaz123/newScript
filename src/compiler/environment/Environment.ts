@@ -3,6 +3,7 @@ import type { Binding } from "./env.types";
 
 export class Environment{
     private values = new Map<string,Binding>();
+    private exports: Record<string, any> = {}; 
     constructor(public readonly parent?:Environment){}
     private checkType(value:any,type:string){
         switch(type){
@@ -43,4 +44,11 @@ export class Environment{
     checkInCurrentScope(name:string){
         return this.values.get(name)
     }
+    setExport(name: string, value: any) {
+        this.exports[name] = value;
+    }
+    getExports() {
+      return this.exports 
+    }
+
 }

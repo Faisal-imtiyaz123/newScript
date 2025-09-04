@@ -1,8 +1,14 @@
-import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
+import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode, type ExportNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type ImportNode, type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { Environment } from "../environment/Environment";
-import { keywords, TokenType } from "../lexer/tokens";
+import { Lexer } from "../lexer/Lexer";
+import { TokenType } from "../lexer/tokens";
+import { Parser } from "../parser/Parser";
 import { BreakSignal, ContinueSignal, createGlobalEnv, ReturnSignal } from "../runtime/Runtime";
 import type { FnValue } from "./interpreter.types";
+import * as fs from "fs";
+import * as path from "path"; 
+
+const moduleCache = new Map<string, any>();
 
 export class Interpreter{
     private globalEnv:Environment
@@ -16,6 +22,49 @@ export class Interpreter{
     public run(program:ProgramNode){
         this.eval(program)
     }
+    private runModule(ast: ProgramNode, filePath: string) {
+  // prepare an empty export object so cycles can see a (possibly partial) shape
+  const placeholder = Object.create(null);
+  moduleCache.set(filePath, placeholder);
+
+  // module env inherits global env
+  const moduleEnv = new Environment(this.globalEnv);
+
+  this.withEnv(() => {
+    this.eval(ast);
+  }, moduleEnv);
+
+  const exports = moduleEnv.getExports();
+
+  // update placeholder with real exports (retain same object if you want)
+  Object.assign(placeholder, exports);
+  return placeholder;
+}
+
+    private loadSource(filePath: string): string {
+  try {
+    return fs.readFileSync(filePath, "utf8");
+  } catch (e) {
+    throw new Error(`Cannot load module '${filePath}': ${e}`);
+  }
+}
+
+private parse(source: string): ProgramNode {
+  const lexer = new Lexer(source);
+  const tokens = lexer.tokenize();
+  const parser = new Parser(tokens);
+  return parser.parseProgram(); // whatever entrypoint gives ProgramNode
+}
+
+private resolvePath(importPath: string): string {
+  // If no extension, assume .my (or .txt, whatever your language uses)
+  const hasExt = /\.[a-zA-Z0-9]+$/.test(importPath);
+  const normalized = hasExt ? importPath : importPath + ".my";
+
+  // Resolve relative to process.cwd()
+  return path.resolve(process.cwd(), normalized);
+}
+
     private typeToString(t: any): string {
     switch (t.type) {
     case "NumberType": return "number";
@@ -160,6 +209,86 @@ export class Interpreter{
             if(n.name)this.localEnv.declare(n.name.name,value,false,"function")
             return value
         }
+case NodeType.EXPORT_NODE: {
+  const n = node as ExportNode;
+
+  // --- Case 1: declaration (function/var/const/default expr) ---
+  if (n.declaration) {
+    const value = this.eval(n.declaration);
+
+    if (n.isDefault) {
+      this.localEnv.setExport("default", value);
+      return;
+    }
+
+    if (n.declaration.type === NodeType.FUNCTION_DECL_NODE) {
+      const fnDecl = n.declaration as FunctionDeclNode;
+      this.localEnv.declare(fnDecl.name!.name, value, false, "function");
+      this.localEnv.setExport(fnDecl.name!.name, value);
+    } else if (
+      n.declaration.type === NodeType.CONST_DECL_NODE ||
+      n.declaration.type === NodeType.VAR_DECL_NODE
+    ) {
+      const decl = n.declaration as ConstDeclNode | VarDeclNode;
+      const name = decl.name.name;
+      this.localEnv.setExport(name, this.localEnv.get(name));
+    } else {
+      // fallback: expression export
+      if (n.name) {
+        this.localEnv.declare(n.name.name, value, true);
+        this.localEnv.setExport(n.name.name, value);
+      }
+    }
+  }
+
+  // --- Case 2: export IDENT; ---
+  else if (n.name) {
+    const value = this.localEnv.get(n.name.name);
+    this.localEnv.setExport(n.name.name, value);
+  }
+
+  // --- Case 3: export { foo, bar as baz }; ---
+  else if (n.specifiers) {
+    for (const spec of n.specifiers) {
+      const value = this.localEnv.get(spec.imported);
+      this.localEnv.setExport(spec.local, value);
+    }
+  }
+
+  return;
+}
+
+
+        case NodeType.IMPORT_NODE: {
+  const n = node as ImportNode;
+  const modulePath = this.resolvePath(n.source.value);
+
+  let exports = moduleCache.get(modulePath);
+  if (!exports) {
+    moduleCache.set(modulePath, Object.create(null));
+    const source = this.loadSource(modulePath);
+    const ast = this.parse(source);
+    exports = this.runModule(ast, modulePath);
+  }
+
+  for (const spec of n.specifiers) {
+    if (spec.imported === "*") {
+      // namespace import: import * as ns
+      this.localEnv.declare(spec.local, exports, true);
+    } else {
+      const importedValue = exports[spec.imported];
+      if (importedValue === undefined) {
+        throw new Error(
+          `Module '${n.source.value}' has no export named '${spec.imported}'`
+        );
+      }
+      this.localEnv.declare(spec.local, importedValue, true);
+    }
+  }
+
+  return;
+}
+
         case NodeType.CALL_NODE:{
             const n = node as CallNode
             const callee = this.eval(n.callee)
