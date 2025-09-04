@@ -73,7 +73,7 @@ export enum TokenType {
   EOF = "EOF",
 }
 
-export type Literal = string | number | boolean | null;
+export type Literal = string | number | boolean | null | {value:string;unterminated:boolean};
 export type Token = {
   type: TokenType;
   lexeme: string;

@@ -1,0 +1,81 @@
+.editor-container {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+  pointer-events: none;
+  color: #d4d4d4;        /* base text color */
+  background: #1e1e1e;   /* dark VSCode-like background */
+  z-index: 0;
+}
+
+/* Transparent textarea with visible caret */
+.editor-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 12px;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: transparent;       /* hide typed text, highlight shows it */
+  caret-color: #ffffff;     /* visible cursor */
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: auto;
+  z-index: 1;
+}
+
+/* Token colors (VSCode inspired) */
+.tok-bracket { color: #FFD700; font-weight: 600; } /* gold */
+
+/* Strings */
+.tok-string { color: #CE9178; }
+.tok-string-error { background-color: #511; color: #f99; }
+
+/* Numbers */
+.tok-number { color: #B5CEA8; }
+
+/* Identifiers */
+.tok-identifier { color: #9CDCFE; }
+
+/* Keywords */
+.tok-keyword { color: #569CD6; font-weight: 600; }
+
+/* Control flow */
+.tok-control { color: #C586C0; font-weight: 600; }
+
+/* Boolean / null */
+.tok-boolean { color: #4EC9B0; font-weight: 600; }
+
+/* Function-like */
+.tok-function { color: #DCDCAA; font-weight: 600; }
+
+/* Types */
+.tok-type { color: #4FC1FF; font-weight: 600; }
+
+/* Operators */
+.tok-operator { color: #D4D4D4; }
+
+/* Default */
+.tok-default { color: #D4D4D4; }

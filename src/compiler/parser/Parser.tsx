@@ -469,7 +469,7 @@ private exportDecl(): ExportNode {
     if (this.matchTokens(TokenType.NULL))   return { type: NodeType.NULL} as NullNode;
 
     if (this.matchTokens(TokenType.NUMBER)) return { type: NodeType.NUMBER, value: Number(this.previous().literal) } as NumberNode;
-    if (this.matchTokens(TokenType.STRING)) return { type: NodeType.STRING, value: String(this.previous().literal) } as StringNode;
+    if (this.matchTokens(TokenType.STRING)) return { type: NodeType.STRING, value: String(this.previous().literal?.value) } as StringNode;
     if (this.matchTokens(TokenType.IDENTIFIER)) return { type:NodeType.IDENTIFIER, name: this.previous().lexeme } as IdentifierNode;
 
     if (this.matchTokens(TokenType.LEFT_PAREN)) {

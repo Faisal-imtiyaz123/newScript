@@ -91,35 +91,36 @@ private skipComments(){
         }
     }
    }
-private string(){
-    let str ="";
-    while(!this.isAtEnd() && this.peek()!=='"'){
-        const ch = this.advance();
-        if(ch=='\\'){
-            switch(this.peek()){
-                case '"':
-                    str += this.advance();
-                    break;
-                case 'n':
-                    str += '\n';
-                    this.advance();
-                    break;
-                case 't':
-                    str += '\t';
-                    this.advance();
-                    break;
-                default:
-                    str += ch;
-                    break;
-            }
-        }else{
-            str += ch;
-        }
+private string() {
+  let str = "";
+  let unterminated = false;
+
+  while (!this.isAtEnd() && this.peek() !== '"') {
+    const ch = this.advance();
+    if (ch === "\\") {
+      const next = this.peek();
+      switch (next) {
+        case '"': str += this.advance(); break;
+        case 'n': str += '\n'; this.advance(); break;
+        case 't': str += '\t'; this.advance(); break;
+        default: str += ch; break;
+      }
+    } else {
+      str += ch;
     }
-    if(this.peek()!='"')throw new Error(`Unterminated string at line ${this.line}, col ${this.col}`);
-    this.advance(); // skip the closing quote
-    return this.makeToken(TokenType.STRING, str,str);
+  }
+
+  if (this.isAtEnd() || this.peek() !== '"') {
+    // Unterminated string: just mark it, don't throw
+    unterminated = true;
+  } else {
+    this.advance(); // consume closing quote
+  }
+
+  // Attach unterminated flag to literal so highlighter can style differently
+  return this.makeToken(TokenType.STRING, str, { value: str, unterminated });
 }
+
 private number(){
     while(/\d/.test(this.peek())){
         this.advance();
