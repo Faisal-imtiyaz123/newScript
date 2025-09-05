@@ -50,7 +50,7 @@ export class Parser{
   private tokens:Token[]
   private current=0
   constructor(tokens:Token[]){
-    this.tokens = tokens
+    this.tokens = tokens.filter((token)=>token.type!=TokenType.WHITESPACE)
   }
   parseProgram():ProgramNode{
     const body:ASTNode[]=[];

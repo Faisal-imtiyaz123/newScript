@@ -101,7 +101,6 @@ function tokenClass(type: TokenType | "STRING_ERROR"): string {
 export function highlightCode(src: string): string {
   const lexer = new Lexer(src);
   const tokens = lexer.tokenize();
-  console.log(tokens)
   let out = "";
   for (const token of tokens) {
     const cls = tokenClass(token.type);
