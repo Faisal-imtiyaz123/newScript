@@ -114,8 +114,9 @@ private string() {
   } else {
     this.advance(); // consume closing quote
   }
+  const lexeme = this.src.slice(this.start, this.current);
   // Attach unterminated flag to literal so highlighter can style differently
-  return this.makeToken(TokenType.STRING, str, { value: str, unterminated });
+  return this.makeToken(TokenType.STRING, lexeme, { value: str, unterminated });
 }
 
 private number(){

@@ -101,6 +101,7 @@ function tokenClass(type: TokenType | "STRING_ERROR"): string {
 export function highlightCode(src: string): string {
   const lexer = new Lexer(src);
   const tokens = lexer.tokenize();
+  console.log(tokens)
   let out = "";
   for (const token of tokens) {
     const cls = tokenClass(token.type);
@@ -111,8 +112,8 @@ export function highlightCode(src: string): string {
         .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
         .replace(/\n/g, "<br/>");
     }else if(token.type === TokenType.STRING && token.literal && typeof(token.literal)=="object" && "unterminated" in token.literal){
-        if(token.literal.unterminated == false) out += `<span class="${cls}">"${escapeHtml(token.lexeme)}"</span>`;
-        else out += `<span class="tok-string-error">"${escapeHtml(token.lexeme)}"</span>`;
+        if(token.literal.unterminated == false) out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
+        else out += `<span class="tok-string-error">${escapeHtml(token.lexeme)}</span>`;
     }
      else {
       out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
