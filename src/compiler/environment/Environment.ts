@@ -23,33 +23,27 @@ export class Environment{
         }
         this.values.set(name,{value,isConstant,type})
     }
-   assign(name: string, value: any): void {
-  if (this.values.has(name)) {
-    const slot = this.values.get(name)!;
-    if (slot.isConstant) throw new Error(`Cannot assign to ${name} because it is a constant`);
-    if (slot.type && slot.type !== "any") {
-      if (!this.checkType(value, slot.type)) {
-        throw new Error(`Type mismatch: expected ${slot.type} but got ${typeof value}`);
-      }
+    assign(name:string,value:any):void{
+        if(!this.getSlot(name))throw new Error(`Variable ${name} is not declared in this scope`)
+        const slot = this.getSlot(name)
+        if(slot?.isConstant)throw new Error(`Cannot assign to ${name} because it is a constant`)
+        if(slot?.type && slot?.type!=="any"){
+            if(!this.checkType(value,slot.type))throw new Error(`Type mismatch:expected ${slot.type} but got ${typeof value}`)
+        }
+        slot!.value = value
     }
-    slot.value = value;
-    return;
-  }
-
-  if (this.parent) {
-    this.parent.assign(name, value); // recurse up
-    return;
-  }
-
-  throw new Error(`Variable ${name} is not declared in this scope`);
-}
-    get(name:string):any{
+    getValue(name:string):any{
         // from current scope
         if(this.values.has(name))return this.values.get(name)!.value
         // from parent scope
-        if(this.parent)return this.parent.get(name)
+        if(this.parent)return this.parent.getValue(name)
         // not found
         throw new Error(`Undefined variable '${name}'`)
+    }
+    getSlot(name:string):any{
+        if(this.values.has(name))return this.values.get(name)
+        if(this.parent)return this.parent.getSlot(name)
+        throw new Error(`Undefined variable ${name}`)
     }
     // Check variable in the current scope
     checkInCurrentScope(name:string){

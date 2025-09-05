@@ -232,7 +232,7 @@ case NodeType.EXPORT_NODE: {
     ) {
       const decl = n.declaration as ConstDeclNode | VarDeclNode;
       const name = decl.name.name;
-      this.localEnv.setExport(name, this.localEnv.get(name));
+      this.localEnv.setExport(name, this.localEnv.getValue(name));
     } else {
       // fallback: expression export
       if (n.name) {
@@ -244,14 +244,14 @@ case NodeType.EXPORT_NODE: {
 
   // --- Case 2: export IDENT; ---
   else if (n.name) {
-    const value = this.localEnv.get(n.name.name);
+    const value = this.localEnv.getValue(n.name.name);
     this.localEnv.setExport(n.name.name, value);
   }
 
   // --- Case 3: export { foo, bar as baz }; ---
   else if (n.specifiers) {
     for (const spec of n.specifiers) {
-      const value = this.localEnv.get(spec.imported);
+      const value = this.localEnv.getValue(spec.imported);
       this.localEnv.setExport(spec.local, value);
     }
   }
@@ -317,7 +317,7 @@ case NodeType.EXPORT_NODE: {
         };
         if (n.target.type === NodeType.IDENTIFIER) {
           const name = (n.target as IdentifierNode).name;
-          const cur = getOrThrow(() => this.localEnv.get(name));
+          const cur = getOrThrow(() => this.localEnv.getValue(name));
           const value = assignOp(cur, n.op, right);
           this.localEnv.assign(name, value);
           return value;
@@ -385,7 +385,7 @@ case NodeType.EXPORT_NODE: {
               throw new Error("Invalid operand for ++ operator");
             }
             const name = (n.right as IdentifierNode).name;
-            const cur = getOrThrow(() => this.localEnv.get(name));
+            const cur = getOrThrow(() => this.localEnv.getValue(name));
             this.localEnv.assign(name, cur + 1);
             return cur + 1;
           }
@@ -394,7 +394,7 @@ case NodeType.EXPORT_NODE: {
               throw new Error("Invalid operand for -- operator");
             }
             const name = (n.right as IdentifierNode).name;
-            const cur = getOrThrow(() => this.localEnv.get(name));
+            const cur = getOrThrow(() => this.localEnv.getValue(name));
             this.localEnv.assign(name, cur - 1);
             return cur - 1;
           }
@@ -408,7 +408,7 @@ case NodeType.EXPORT_NODE: {
             throw new Error(`Invalid operand for ${n.operator} operator`);
           }
           const name = (n.operand as IdentifierNode).name;
-          const cur = getOrThrow(() => this.localEnv.get(name));
+          const cur = getOrThrow(() => this.localEnv.getValue(name));
           this.localEnv.assign(name, n.operator === TokenType.PLUS_PLUS ? cur + 1 : cur - 1);
         }else {
           throw new Error(`Unknown postfix operator ${n.operator}`);
@@ -425,7 +425,7 @@ case NodeType.EXPORT_NODE: {
         case NodeType.NULL:return null
         case NodeType.IDENTIFIER:{
             const name = (node as IdentifierNode).name
-            return this.localEnv.get(name)
+            return this.localEnv.getValue(name)
         }
         case NodeType.GROUPING:return this.eval((node as GroupingNode).expression)
         case NodeType.ARRAY:{
