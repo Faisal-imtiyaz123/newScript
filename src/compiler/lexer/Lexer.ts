@@ -91,15 +91,16 @@ private skipComments(){
         }
     }
    }
-private string() {
+private string(delimiter: '"' | "'") {
   let str = "";
   let unterminated = false;
-  while (!this.isAtEnd() && this.peek() !== '"') {
+  while (!this.isAtEnd() && this.peek() !== delimiter) {
     const ch = this.advance();
     if (ch === "\\") {
       const next = this.peek();
       switch (next) {
-        case '"': str += this.advance(); break;
+        case '"': 
+        case "'": str += this.advance(); break;
         case 'n': str += '\n'; this.advance(); break;
         case 't': str += '\t'; this.advance(); break;
         default: str += ch; break;
@@ -108,16 +109,16 @@ private string() {
       str += ch;
     }
   }
-  if (this.isAtEnd() || this.peek() !== '"') {
-    // Unterminated string: just mark it, don't throw
+  if (this.isAtEnd() || this.peek() !== delimiter) {
     unterminated = true;
   } else {
-    this.advance(); // consume closing quote
+    this.advance(); // consume closing delimiter
   }
+
   const lexeme = this.src.slice(this.start, this.current);
-  // Attach unterminated flag to literal so highlighter can style differently
   return this.makeToken(TokenType.STRING, lexeme, { value: str, unterminated });
 }
+
 
 private number(){
     while(/\d/.test(this.peek())){
@@ -203,7 +204,8 @@ private scan(){
      return this.makeToken(TokenType.PIPE, "|");
 
       // Strings
-      case '"': return this.string();
+      case '"': return this.string('"');
+      case "'": return this.string("'")
       //white space
       case ' ':
       case '\t':
