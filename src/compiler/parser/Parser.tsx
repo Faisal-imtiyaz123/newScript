@@ -238,7 +238,7 @@ private exportDecl(): ExportNode {
 }
 
   private statement():ASTNode{
-     if (this.matchTokens(TokenType.PRINT)) return this.printStmt();
+    if (this.matchTokens(TokenType.PRINT)) return this.printStmt();
     if (this.matchTokens(TokenType.IF)) return this.ifStmt();
     if (this.matchTokens(TokenType.WHILE)) return this.whileStmt();
     if (this.matchTokens(TokenType.FOR)) return this.forStmt();
@@ -293,14 +293,13 @@ private exportDecl(): ExportNode {
     if(!this.match(TokenType.SEMICOLON))condition = this.expression()
     this.matchWithError(TokenType.SEMICOLON,"Expected Semicolon ater condition")
     let update:ASTNode|undefined
-    if(!this.match(TokenType.SEMICOLON))update = this.expression()
-    this.matchWithError(TokenType.SEMICOLON,"Expected Semicolon after update condition")
+    if(!this.match(TokenType.RIGHT_PAREN))update = this.expression()
+    this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after for clauses" )
     const body = this.statement()
     return {type:NodeType.FOR_NODE,init,condition,update,body}
   }
   private block(): BlockNode {
     const body: ASTNode[] = [];
-    this.matchWithError(TokenType.LEFT_BRACE, "Expected '{' to start block");
     while (!this.match(TokenType.RIGHT_BRACE) && !this.isAtEnd()) body.push(this.declaration());
     this.matchWithError(TokenType.RIGHT_BRACE, "Expected '}' after block");
     return { type: NodeType.BLOCK, body };
