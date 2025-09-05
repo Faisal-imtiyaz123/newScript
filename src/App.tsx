@@ -43,7 +43,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", gap: 16, padding: 16, height: "100vh", boxSizing: "border-box" }}>
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0,position:"relative" }}>
+      <div style={{ width:"100vw", display: "flex", flexDirection: "column", minHeight: 0,position:"relative" }}>
         <h2 style={{ margin: 0, marginBottom: 8 }}>newScript Editor</h2>
         <div className="editor-container">
           <pre
@@ -68,7 +68,7 @@ export default function App() {
           Run
         </button>
       </div>
-      <div style={{ width: 430, display: "flex", flexDirection: "column"}}>
+      <div style={{width: 430, display: "flex", flexDirection: "column"}}>
         <h2 style={{ margin: 0, marginBottom: 8 }}>Output</h2>
         <pre style={{ flex:1,margin:0, background: "#111", color: "#0f0", overflow: "auto" ,padding:10}}>
           {output.join("\n")}
