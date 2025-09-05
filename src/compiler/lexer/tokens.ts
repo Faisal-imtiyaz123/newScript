@@ -69,6 +69,8 @@ export enum TokenType {
   FROM="FROM",
   AS="AS",
   DEFAULT="DEFAULT",
+  //WhiteSpace
+  WHITESPACE = "WHITESPACE",
   // End of file
   EOF = "EOF",
 }

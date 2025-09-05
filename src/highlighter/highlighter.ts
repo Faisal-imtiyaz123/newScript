@@ -90,6 +90,7 @@ function tokenClass(type: TokenType | "STRING_ERROR"): string {
     case TokenType.AND_AND:
     case TokenType.OR_OR:
       return "tok-operator";
+    case TokenType.WHITESPACE: return "tok-whitespace";
     default:
       return "tok-default";
   }
@@ -99,31 +100,24 @@ function tokenClass(type: TokenType | "STRING_ERROR"): string {
 
 export function highlightCode(src: string): string {
   const lexer = new Lexer(src);
+  const tokens = lexer.tokenize();
   let out = "";
-  let pos = 0;
-  try {
-    const tokens = lexer.tokenize();
-    for (const t of tokens) {
-      if (t.type === (TokenType as any).EOF) continue;
-      const idx = src.indexOf(t.lexeme, pos);
-      out += escapeHtml(src.slice(pos, idx));
-      out += `<span class="${tokenClass(t.type)}">${escapeHtml(t.lexeme)}</span>`;
-      pos = idx + t.lexeme.length;
+  for (const token of tokens) {
+    const cls = tokenClass(token.type);
+    if (token.type === TokenType.WHITESPACE) {
+      // Preserve spaces/tabs/newlines as-is
+      out += token.lexeme
+        .replace(/ /g, "&nbsp;")
+        .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
+        .replace(/\n/g, "<br/>");
+    }else if(token.type === TokenType.STRING && token.literal && typeof(token.literal)=="object" && "unterminated" in token.literal){
+        if(token.literal.unterminated == false) out += `<span class="${cls}">"${escapeHtml(token.lexeme)}"</span>`;
+        else out += `<span class="tok-string-error">"${escapeHtml(token.lexeme)}"</span>`;
     }
-    out += escapeHtml(src.slice(pos));
-  } catch (e: any) {
-    // Handle unterminated string specifically
-    const msg = (e.message as string) || "";
-    const match = msg.match(/Unterminated string at line \d+, col \d+/);
-    if (match) {
-      // everything from lexer.current to end is part of string-error
-      const safePart = escapeHtml(src.slice(pos));
-      out += `<span class="${tokenClass("STRING_ERROR")}">${safePart}</span>`;
-    } else {
-      // any other error, just output raw escaped source
-      out += escapeHtml(src.slice(pos));
+     else {
+      out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
     }
   }
-  if (!out.endsWith("\n")) out += "\n";
+
   return out;
 }

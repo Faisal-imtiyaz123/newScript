@@ -143,9 +143,20 @@ private identifier(){
     }
     return this.makeToken(TokenType.IDENTIFIER, idStr);
 }
+private whitespace() {
+  while (!this.isAtEnd()) {
+    const ch = this.peek();
+    if (ch === ' ' || ch === '\t' || ch === '\r' || ch === '\n') {
+      this.advance();
+    } else {
+      break;
+    }
+  }
+  const text = this.src.slice(this.start, this.current);
+  return this.makeToken(TokenType.WHITESPACE, text);
+}
 private scan(){
     this.skipComments();
-    this.skipWhiteSpace();
     if(this.isAtEnd()) return null;
     this.start = this.current;
     const ch = this.advance();
@@ -192,6 +203,12 @@ private scan(){
 
       // Strings
       case '"': return this.string();
+      //white space
+      case ' ':
+      case '\t':
+      case '\r':
+      case '\n':
+         return this.whitespace();
     }
     if (/\d/.test(ch)) return this.number();
 

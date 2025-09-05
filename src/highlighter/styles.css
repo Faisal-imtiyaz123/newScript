@@ -76,6 +76,7 @@
 
 /* Operators */
 .tok-operator { color: #D4D4D4; }
-
+/* WhiteSpace */
+.tok-whitespace { white-space: pre; }
 /* Default */
 .tok-default { color: #D4D4D4; }
