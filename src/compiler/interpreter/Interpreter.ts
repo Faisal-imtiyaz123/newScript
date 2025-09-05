@@ -1,3 +1,4 @@
+
 import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode, type ExportNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type ImportNode, type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { Environment } from "../environment/Environment";
 import { Lexer } from "../lexer/Lexer";
@@ -377,9 +378,9 @@ case NodeType.EXPORT_NODE: {
         const n = node as UnaryOpNode;
         const v = this.eval(n.right);
         switch (n.operator) {
-          case "-": return -v;
-          case "!": return !this.truthy(v);
-          case "++":{
+          case TokenType.MINUS: return -v;
+          case TokenType.BANG: return !this.truthy(v);
+          case TokenType.PLUS_PLUS:{
             if(n.right.type !== NodeType.IDENTIFIER) {
               throw new Error("Invalid operand for ++ operator");
             }
@@ -388,7 +389,7 @@ case NodeType.EXPORT_NODE: {
             this.localEnv.assign(name, cur + 1);
             return cur + 1;
           }
-          case "--": {
+          case TokenType.MINUS_MINUS: {
             if(n.right.type !== NodeType.IDENTIFIER) {
               throw new Error("Invalid operand for -- operator");
             }
@@ -402,13 +403,13 @@ case NodeType.EXPORT_NODE: {
       }
       case NodeType.POST_FIX_NODE: {
         const n = node as PostfixNode;
-        if (n.operator === "++" || n.operator === "--") {
+        if (n.operator === TokenType.PLUS_PLUS || n.operator === TokenType.MINUS_MINUS) {
           if (n.operand.type !== NodeType.IDENTIFIER) {
             throw new Error(`Invalid operand for ${n.operator} operator`);
           }
           const name = (n.operand as IdentifierNode).name;
           const cur = getOrThrow(() => this.localEnv.get(name));
-          this.localEnv.assign(name, n.operator === "++" ? cur + 1 : cur - 1);
+          this.localEnv.assign(name, n.operator === TokenType.PLUS_PLUS ? cur + 1 : cur - 1);
         }else {
           throw new Error(`Unknown postfix operator ${n.operator}`);
         }

@@ -23,15 +23,26 @@ export class Environment{
         }
         this.values.set(name,{value,isConstant,type})
     }
-    assign(name:string,value:any):void{
-        if(!this.values.get(name))throw new Error(`Variable ${name} is not declared in this scope`)
-        const slot = this.values.get(name)
-        if(slot?.isConstant)throw new Error(`Cannot assign to ${name} because it is a constant`)
-        if(slot?.type && slot?.type!=="any"){
-            if(!this.checkType(value,slot.type))throw new Error(`Type mismatch:expected ${slot.type} but got ${typeof value}`)
-        }
-      slot!.value = value
+   assign(name: string, value: any): void {
+  if (this.values.has(name)) {
+    const slot = this.values.get(name)!;
+    if (slot.isConstant) throw new Error(`Cannot assign to ${name} because it is a constant`);
+    if (slot.type && slot.type !== "any") {
+      if (!this.checkType(value, slot.type)) {
+        throw new Error(`Type mismatch: expected ${slot.type} but got ${typeof value}`);
+      }
     }
+    slot.value = value;
+    return;
+  }
+
+  if (this.parent) {
+    this.parent.assign(name, value); // recurse up
+    return;
+  }
+
+  throw new Error(`Variable ${name} is not declared in this scope`);
+}
     get(name:string):any{
         // from current scope
         if(this.values.has(name))return this.values.get(name)!.value
