@@ -3,9 +3,9 @@ import type { Binding } from "./env.types";
 
 export class Environment{
     private values = new Map<string,Binding>();
-    private exports: Record<string, any> = {}; 
+    private exports: Record<string, unknown> = {}; 
     constructor(public readonly parent?:Environment){}
-    private checkType(value:any,type:string){
+    private checkType(value:unknown,type:string){
         switch(type){
             case "number": return typeof value==="number";
             case "string": return typeof value==="string";
@@ -14,7 +14,7 @@ export class Environment{
             default : return true;
         }
     }
-    declare(name:string,value:any,isConstant:boolean,type?:string){
+    declare<T>(name:string,value:T,isConstant:boolean,type?:string){
         if(this.values.has(name)){
             throw new Error(`Variable ${name} already declared in this scope`)
         }
@@ -23,7 +23,7 @@ export class Environment{
         }
         this.values.set(name,{value,isConstant,type})
     }
-    assign(name:string,value:any):void{
+    assign<T>(name:string,value:T):void{
         if(!this.getSlot(name))throw new Error(`Variable ${name} is not declared in this scope`)
         const slot = this.getSlot(name)
         if(slot?.isConstant)throw new Error(`Cannot assign to ${name} because it is a constant`)
@@ -32,7 +32,7 @@ export class Environment{
         }
         slot!.value = value
     }
-    getValue(name:string):any{
+    getValue<T>(name:string):T{
         // from current scope
         if(this.values.has(name))return this.values.get(name)!.value
         // from parent scope
@@ -40,7 +40,7 @@ export class Environment{
         // not found
         throw new Error(`Undefined variable '${name}'`)
     }
-    getSlot(name:string):any{
+    getSlot(name:string):Binding|undefined{
         if(this.values.has(name))return this.values.get(name)
         if(this.parent)return this.parent.getSlot(name)
         throw new Error(`Undefined variable ${name}`)
@@ -49,7 +49,7 @@ export class Environment{
     checkInCurrentScope(name:string){
         return this.values.get(name)
     }
-    setExport(name: string, value: any) {
+    setExport(name: string, value: unknown) {
         this.exports[name] = value;
     }
     getExports() {

@@ -72,6 +72,7 @@ export class Parser{
   if (this.matchTokens(TokenType.ANY_TYPE)) return { type: "AnyType" };
   throw new Error("Expected type annotation");
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private inferType(t: any): TypeAnnotation {
      switch (typeof t) {
        case "number": return {type: "NumberType"};
@@ -317,6 +318,7 @@ private exportDecl(): ExportNode {
         const op = this.previous().lexeme
         const value = this.assignment()
         if(left.type===NodeType.IDENTIFIER || left.type===NodeType.MEMBER || left.type===NodeType.INDEX){
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return {type:NodeType.ASSIGNMENT_NODE,op,target:left as any ,value}
         }
     }
@@ -469,7 +471,11 @@ private exportDecl(): ExportNode {
     if (this.matchTokens(TokenType.NULL))   return { type: NodeType.NULL} as NullNode;
 
     if (this.matchTokens(TokenType.NUMBER)) return { type: NodeType.NUMBER, value: Number(this.previous().literal) } as NumberNode;
-    if (this.matchTokens(TokenType.STRING)) return { type: NodeType.STRING, value: String(this.previous().literal?.value) } as StringNode;
+    if (this.matchTokens(TokenType.STRING)){
+      const lit = this.previous().literal
+      if(lit && typeof(lit)==="object") return { type: NodeType.STRING, value: String(lit.value) } as StringNode;
+    } 
+      
     if (this.matchTokens(TokenType.IDENTIFIER)) return { type:NodeType.IDENTIFIER, name: this.previous().lexeme } as IdentifierNode;
 
     if (this.matchTokens(TokenType.LEFT_PAREN)) {

@@ -22,6 +22,7 @@ export default function App() {
     setOutput([]);
     try {
       runSource(code, (s) => setOutput((prev) => [...prev, s]));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setOutput([`Error: ${e.message ?? String(e)}`]);
     }

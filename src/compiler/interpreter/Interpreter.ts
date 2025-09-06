@@ -1,15 +1,15 @@
 
-import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode, type ExportNode, type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode, type ImportNode, type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
+import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode,type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode,  type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type TypeAnnotation, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { Environment } from "../environment/Environment";
 import { Lexer } from "../lexer/Lexer";
 import { TokenType } from "../lexer/tokens";
 import { Parser } from "../parser/Parser";
 import { BreakSignal, ContinueSignal, createGlobalEnv, ReturnSignal } from "../runtime/Runtime";
 import type { FnValue } from "./interpreter.types";
-import * as fs from "fs";
-import * as path from "path"; 
+// import * as fs from "fs";
+// import * as path from "path"; 
 
-const moduleCache = new Map<string, any>();
+// const moduleCache = new Map<string, any>();
 
 export class Interpreter{
     private globalEnv:Environment
@@ -23,32 +23,32 @@ export class Interpreter{
     public run(program:ProgramNode){
         this.eval(program)
     }
-    private runModule(ast: ProgramNode, filePath: string) {
-  // prepare an empty export object so cycles can see a (possibly partial) shape
-  const placeholder = Object.create(null);
-  moduleCache.set(filePath, placeholder);
+//     private runModule(ast: ProgramNode, filePath: string) {
+//   // prepare an empty export object so cycles can see a (possibly partial) shape
+//   const placeholder = Object.create(null);
+//   moduleCache.set(filePath, placeholder);
 
-  // module env inherits global env
-  const moduleEnv = new Environment(this.globalEnv);
+//   // module env inherits global env
+//   const moduleEnv = new Environment(this.globalEnv);
 
-  this.withEnv(() => {
-    this.eval(ast);
-  }, moduleEnv);
+//   this.withEnv(() => {
+//     this.eval(ast);
+//   }, moduleEnv);
 
-  const exports = moduleEnv.getExports();
+//   const exports = moduleEnv.getExports();
 
-  // update placeholder with real exports (retain same object if you want)
-  Object.assign(placeholder, exports);
-  return placeholder;
-}
+//   // update placeholder with real exports (retain same object if you want)
+//   Object.assign(placeholder, exports);
+//   return placeholder;
+// }
 
-    private loadSource(filePath: string): string {
-  try {
-    return fs.readFileSync(filePath, "utf8");
-  } catch (e) {
-    throw new Error(`Cannot load module '${filePath}': ${e}`);
-  }
-}
+//     private loadSource(filePath: string): string {
+//   try {
+//     return fs.readFileSync(filePath, "utf8");
+//   } catch (e) {
+//     throw new Error(`Cannot load module '${filePath}': ${e}`);
+//   }
+// }
 
 private parse(source: string): ProgramNode {
   const lexer = new Lexer(source);
@@ -57,16 +57,16 @@ private parse(source: string): ProgramNode {
   return parser.parseProgram(); // whatever entrypoint gives ProgramNode
 }
 
-private resolvePath(importPath: string): string {
-  // If no extension, assume .my (or .txt, whatever your language uses)
-  const hasExt = /\.[a-zA-Z0-9]+$/.test(importPath);
-  const normalized = hasExt ? importPath : importPath + ".my";
+// private resolvePath(importPath: string): string {
+//   // If no extension, assume .my (or .txt, whatever your language uses)
+//   const hasExt = /\.[a-zA-Z0-9]+$/.test(importPath);
+//   const normalized = hasExt ? importPath : importPath + ".my";
 
-  // Resolve relative to process.cwd()
-  return path.resolve(process.cwd(), normalized);
-}
+//   // Resolve relative to process.cwd()
+//   return path.resolve(process.cwd(), normalized);
+// }
 
-    private typeToString(t: any): string {
+    private typeToString(t:TypeAnnotation): string {
     switch (t.type) {
     case "NumberType": return "number";
     case "StringType": return "string";
@@ -85,14 +85,17 @@ private resolvePath(importPath: string): string {
       this.localEnv = prev;                           // Restore old env after running
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private truthy(v:any){return !!v}
   private makeCallable(fn:FnValue){
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const callable = (...args:any[])=>this.callUserFn(fn,args)
     Object.defineProperty(callable,"__callable",{value:true})
     Object.defineProperty(callable,"__fn",{value:fn})
     if(fn.name)Object.defineProperty(callable,"name",{value:fn.name})
     return callable
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private callUserFn(fn:FnValue,args:any[]){
     if(args.length!=fn.params.length){
         throw new Error(`Function ${fn.name ?? "<anon>"} expected ${fn.params.length} args, got ${args.length}`);
@@ -118,6 +121,7 @@ private resolvePath(importPath: string): string {
       throw sig; // Other signals bubble up
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private eval(node:ASTNode):any{
     switch(node.type){
         case NodeType.PROGRAM:
@@ -210,85 +214,85 @@ private resolvePath(importPath: string): string {
             if(n.name)this.localEnv.declare(n.name.name,value,false,"function")
             return value
         }
-case NodeType.EXPORT_NODE: {
-  const n = node as ExportNode;
+// case NodeType.EXPORT_NODE: {
+//   const n = node as ExportNode;
 
-  // --- Case 1: declaration (function/var/const/default expr) ---
-  if (n.declaration) {
-    const value = this.eval(n.declaration);
+//   // --- Case 1: declaration (function/var/const/default expr) ---
+//   if (n.declaration) {
+//     const value = this.eval(n.declaration);
 
-    if (n.isDefault) {
-      this.localEnv.setExport("default", value);
-      return;
-    }
+//     if (n.isDefault) {
+//       this.localEnv.setExport("default", value);
+//       return;
+//     }
 
-    if (n.declaration.type === NodeType.FUNCTION_DECL_NODE) {
-      const fnDecl = n.declaration as FunctionDeclNode;
-      this.localEnv.declare(fnDecl.name!.name, value, false, "function");
-      this.localEnv.setExport(fnDecl.name!.name, value);
-    } else if (
-      n.declaration.type === NodeType.CONST_DECL_NODE ||
-      n.declaration.type === NodeType.VAR_DECL_NODE
-    ) {
-      const decl = n.declaration as ConstDeclNode | VarDeclNode;
-      const name = decl.name.name;
-      this.localEnv.setExport(name, this.localEnv.getValue(name));
-    } else {
-      // fallback: expression export
-      if (n.name) {
-        this.localEnv.declare(n.name.name, value, true);
-        this.localEnv.setExport(n.name.name, value);
-      }
-    }
-  }
+//     if (n.declaration.type === NodeType.FUNCTION_DECL_NODE) {
+//       const fnDecl = n.declaration as FunctionDeclNode;
+//       this.localEnv.declare(fnDecl.name!.name, value, false, "function");
+//       this.localEnv.setExport(fnDecl.name!.name, value);
+//     } else if (
+//       n.declaration.type === NodeType.CONST_DECL_NODE ||
+//       n.declaration.type === NodeType.VAR_DECL_NODE
+//     ) {
+//       const decl = n.declaration as ConstDeclNode | VarDeclNode;
+//       const name = decl.name.name;
+//       this.localEnv.setExport(name, this.localEnv.getValue(name));
+//     } else {
+//       // fallback: expression export
+//       if (n.name) {
+//         this.localEnv.declare(n.name.name, value, true);
+//         this.localEnv.setExport(n.name.name, value);
+//       }
+//     }
+//   }
 
-  // --- Case 2: export IDENT; ---
-  else if (n.name) {
-    const value = this.localEnv.getValue(n.name.name);
-    this.localEnv.setExport(n.name.name, value);
-  }
+//   // --- Case 2: export IDENT; ---
+//   else if (n.name) {
+//     const value = this.localEnv.getValue(n.name.name);
+//     this.localEnv.setExport(n.name.name, value);
+//   }
 
-  // --- Case 3: export { foo, bar as baz }; ---
-  else if (n.specifiers) {
-    for (const spec of n.specifiers) {
-      const value = this.localEnv.getValue(spec.imported);
-      this.localEnv.setExport(spec.local, value);
-    }
-  }
+//   // --- Case 3: export { foo, bar as baz }; ---
+//   else if (n.specifiers) {
+//     for (const spec of n.specifiers) {
+//       const value = this.localEnv.getValue(spec.imported);
+//       this.localEnv.setExport(spec.local, value);
+//     }
+//   }
 
-  return;
-}
+//   return;
+// }
 
 
-        case NodeType.IMPORT_NODE: {
-  const n = node as ImportNode;
-  const modulePath = this.resolvePath(n.source.value);
+//         case NodeType.IMPORT_NODE: {
+//   const n = node as ImportNode;
+//   const modulePath = this.resolvePath(n.source.value);
 
-  let exports = moduleCache.get(modulePath);
-  if (!exports) {
-    moduleCache.set(modulePath, Object.create(null));
-    const source = this.loadSource(modulePath);
-    const ast = this.parse(source);
-    exports = this.runModule(ast, modulePath);
-  }
+//   let exports = moduleCache.get(modulePath);
+//   if (!exports) {
+//     moduleCache.set(modulePath, Object.create(null));
+//     const source = this.loadSource(modulePath);
+//     const ast = this.parse(source);
+//     exports = this.runModule(ast, modulePath);
+//   }
 
-  for (const spec of n.specifiers) {
-    if (spec.imported === "*") {
-      // namespace import: import * as ns
-      this.localEnv.declare(spec.local, exports, true);
-    } else {
-      const importedValue = exports[spec.imported];
-      if (importedValue === undefined) {
-        throw new Error(
-          `Module '${n.source.value}' has no export named '${spec.imported}'`
-        );
-      }
-      this.localEnv.declare(spec.local, importedValue, true);
-    }
-  }
+//   for (const spec of n.specifiers) {
+//     if (spec.imported === "*") {
+//       // namespace import: import * as ns
+//       this.localEnv.declare(spec.local, exports, true);
+//     } else {
+//       const importedValue = exports[spec.imported];
+//       if (importedValue === undefined) {
+//         throw new Error(
+//           `Module '${n.source.value}' has no export named '${spec.imported}'`
+//         );
+//       }
+//       this.localEnv.declare(spec.local, importedValue, true);
+//     }
+//   }
 
-  return;
-}
+//   return;
+// }
 
         case NodeType.CALL_NODE:{
             const n = node as CallNode
@@ -304,6 +308,7 @@ case NodeType.EXPORT_NODE: {
         case NodeType.ASSIGNMENT_NODE:{
             const n = node as AssignmentNode
             const right = this.eval(n.value)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const assignOp = (cur: any, op: string, val: any) => {
              switch (op) {
               case "=": return val;
@@ -385,7 +390,7 @@ case NodeType.EXPORT_NODE: {
               throw new Error("Invalid operand for ++ operator");
             }
             const name = (n.right as IdentifierNode).name;
-            const cur = getOrThrow(() => this.localEnv.getValue(name));
+            const cur = getOrThrow<number>(() => this.localEnv.getValue(name));
             this.localEnv.assign(name, cur + 1);
             return cur + 1;
           }
@@ -394,7 +399,7 @@ case NodeType.EXPORT_NODE: {
               throw new Error("Invalid operand for -- operator");
             }
             const name = (n.right as IdentifierNode).name;
-            const cur = getOrThrow(() => this.localEnv.getValue(name));
+            const cur = getOrThrow<number>(() => this.localEnv.getValue(name));
             this.localEnv.assign(name, cur - 1);
             return cur - 1;
           }
@@ -408,7 +413,7 @@ case NodeType.EXPORT_NODE: {
             throw new Error(`Invalid operand for ${n.operator} operator`);
           }
           const name = (n.operand as IdentifierNode).name;
-          const cur = getOrThrow(() => this.localEnv.getValue(name));
+          const cur = getOrThrow<number>(() => this.localEnv.getValue(name));
           this.localEnv.assign(name, n.operator === TokenType.PLUS_PLUS ? cur + 1 : cur - 1);
         }else {
           throw new Error(`Unknown postfix operator ${n.operator}`);
@@ -434,6 +439,7 @@ case NodeType.EXPORT_NODE: {
         }
         case NodeType.OBJECT:{
             const n = node as ObjectNode
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const obj:any = {}
             for(const p of n.properties)obj[p.key] = this.eval(p.value)
             return obj
@@ -451,6 +457,7 @@ case NodeType.EXPORT_NODE: {
         }
         default:{
             const never:never = node as never
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             throw new Error(`Unhandled node ${(never as any)?.type}`)
         }
     }
