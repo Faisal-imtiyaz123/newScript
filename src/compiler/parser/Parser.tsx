@@ -250,7 +250,7 @@ private exportDecl(): ExportNode {
       this.matchWithError(TokenType.SEMICOLON, "Expected ';' after return");
       return { type: NodeType.RETURN_NODE, returnVal};
     }
-    if (this.matchTokens(TokenType.LEFT_BRACE)) return this.block();
+    if (this.match(TokenType.LEFT_BRACE)) return this.block();
     if (this.matchTokens(TokenType.FUNCTION)) return this.funcDecl(false);
     return this.exprStmt();
   }
@@ -300,6 +300,7 @@ private exportDecl(): ExportNode {
   }
   private block(): BlockNode {
     const body: ASTNode[] = [];
+    this.matchWithError(TokenType.LEFT_BRACE, "Expected '{' to start block");
     while (!this.match(TokenType.RIGHT_BRACE) && !this.isAtEnd()) body.push(this.declaration());
     this.matchWithError(TokenType.RIGHT_BRACE, "Expected '}' after block");
     return { type: NodeType.BLOCK, body };
