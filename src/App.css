@@ -1,0 +1,132 @@
+/* App.css - full replacement */
+
+.app-root {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  height: 100vh;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+/* Editor column — must be able to shrink: min-height:0 is important */
+.editor-section {
+  flex: 1 1 auto;           /* grow and shrink */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;            /* allow children (editor-container) to shrink */
+  position: relative;
+}
+
+/* The editor area that holds the highlighted pre + textarea overlay */
+.editor-container {
+  position: relative;
+  flex: 1 1 auto;           /* fill remaining vertical space */
+  min-height: 0;            /* critical so absolute children get non-zero height in flex items */
+  border-radius: 6px;
+  overflow: hidden;         /* hide extra overflow from inner layers */
+  background: white;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04) inset;
+}
+
+/* Both layers overlay the same area */
+.highlight-layer,
+.editor-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;         /* keep formatting same as textarea */
+  overflow: auto;
+}
+
+/* Highlighted HTML sits beneath and shows syntax colors */
+.highlight-layer {
+  z-index: 1;
+  pointer-events: none;     /* clicks go to the textarea */
+}
+
+/* Textarea sits above, but text is transparent so highlight shows through.
+   Keep caret visible via caret-color. */
+.editor-layer {
+  z-index: 2;
+  background: transparent;
+  color: transparent;                 /* hide raw text */
+  -webkit-text-fill-color: transparent; /* Safari */
+  caret-color: #000;                  /* visible caret color */
+  border: none;
+  outline: none;
+  resize: none;
+  line-height: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 12px;
+}
+
+/* Make sure selections still show nicely */
+.editor-layer::selection {
+  background: rgba(100, 150, 255, 0.25);
+}
+
+/* Run button */
+.run-button {
+  padding: 8px 12px;
+  position: absolute;
+  right: 8px;
+  top: 40px;
+  z-index: 4;
+  background-color: green;
+  color: white;
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+}
+
+/* Output column */
+.output-section {
+  width: 430px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* allow child to shrink if needed */
+}
+
+/* Output box - scrollable and fills its column */
+.output-box {
+  flex: 1 1 auto;
+  min-height: 0;         /* very important for correct scroll inside flex */
+  margin: 0;
+  background: #111;
+  color: #0f0;
+  padding: 10px;
+  overflow: auto;        /* independent scrolling */
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* ---------- Mobile / narrow screens (stack) ---------- */
+@media (max-width: 768px) {
+  .app-root {
+    flex-direction: column;
+  }
+
+  .output-section {
+    width: 100%;
+  }
+
+  /* limit height of output when stacked, then scroll inside it */
+  .output-box {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  /* allow editor to take the remaining height */
+  .editor-section {
+    flex: 1 1 auto;
+  }
+}
