@@ -1,9 +1,7 @@
 
 import { NodeType, type ArrayNode, type AssignmentNode, type ASTNode, type BinaryOpNode, type BlockNode, type BooleanNode, type CallNode, type ConstDeclNode,type ExprStmtNode, type ForNode, type FunctionDeclNode, type GroupingNode, type IdentifierNode, type IfNode,  type IndexNode, type MemberNode, type NumberNode, type ObjectNode, type PostfixNode, type PrintNode, type ProgramNode, type ReturnNode, type StringNode, type TernaryNode, type TypeAnnotation, type UnaryOpNode, type VarDeclNode, type WhileNode } from "../ast/ast";
 import { Environment } from "../environment/Environment";
-import { Lexer } from "../lexer/Lexer";
 import { TokenType } from "../lexer/tokens";
-import { Parser } from "../parser/Parser";
 import { BreakSignal, ContinueSignal, createGlobalEnv, ReturnSignal } from "../runtime/Runtime";
 import type { FnValue } from "./interpreter.types";
 // import * as fs from "fs";
@@ -50,12 +48,7 @@ export class Interpreter{
 //   }
 // }
 
-private parse(source: string): ProgramNode {
-  const lexer = new Lexer(source);
-  const tokens = lexer.tokenize();
-  const parser = new Parser(tokens);
-  return parser.parseProgram(); // whatever entrypoint gives ProgramNode
-}
+
 
 // private resolvePath(importPath: string): string {
 //   // If no extension, assume .my (or .txt, whatever your language uses)
