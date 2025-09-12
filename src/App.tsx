@@ -4,7 +4,7 @@ import { runSource } from "./compiler";
 import { highlightCode } from "./highlighter/highlighter";
 import "./highlighter/styles.css";
 
-const SAMPLE = `// newLang Example Programs
+const SAMPLE = `// newScript Example Programs
 // Explore syntax, types, functions, and control flow
 
 // === Variables ===
