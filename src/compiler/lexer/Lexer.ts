@@ -61,36 +61,6 @@ private makeToken(type:TokenType,lexeme:string,literal?:Literal){
     };
     return token;
 }
-private skipWhiteSpace(){
-    while(!this.isAtEnd()){
-        const ch = this.peek();
-        if(ch === ' ' || ch === '\t' || ch === '\r' || ch=='\n'){
-            this.advance();
-        }else{
-            break;
-        }
-    }
-}
-private skipComments(){
-    const ch = this.peek();
-    if(ch=='/' && this.peekNext()=='/'){
-        while(this.peek()!='\n' && !this.isAtEnd()){
-            this.advance();
-        }
-    }
-    if(ch=='/' && this.peekNext()=='*'){
-        this.advance();
-        this.advance();
-        while(!this.isAtEnd()){
-            if(this.peek()=='*' && this.peekNext()=='/'){
-                this.advance();
-                this.advance();
-                break;
-            }
-            this.advance();
-        }
-    }
-   }
 private string(delimiter: '"' | "'") {
   let str = "";
   let unterminated = false;
@@ -114,7 +84,6 @@ private string(delimiter: '"' | "'") {
   } else {
     this.advance(); // consume closing delimiter
   }
-
   const lexeme = this.src.slice(this.start, this.current);
   return this.makeToken(TokenType.STRING, lexeme, { value: str, unterminated });
 }
@@ -158,7 +127,6 @@ private whitespace() {
   return this.makeToken(TokenType.WHITESPACE, text);
 }
 private scan(){
-    this.skipComments();
     if(this.isAtEnd()) return null;
     this.start = this.current;
     const ch = this.advance();
@@ -185,7 +153,29 @@ private scan(){
       if(this.match("=")) return this.makeToken(TokenType.MINUS_EQUAL, this.src.slice(this.start, this.current));
       return this.makeToken(TokenType.MINUS, this.src.slice(this.start, this.current));
       case "*": return this.makeToken(this.match("=") ? TokenType.STAR_EQUAL : TokenType.STAR, this.src.slice(this.start, this.current));
-      case "/": return this.makeToken(this.match("=") ? TokenType.SLASH_EQUAL : TokenType.SLASH, this.src.slice(this.start, this.current));
+      case "/":
+  if (this.match("/")) {
+    // it's a line comment
+    while (this.peek() !== "\n" && !this.isAtEnd()) this.advance();
+    const text = this.src.slice(this.start, this.current);
+    return this.makeToken(TokenType.LINE_COMMENT, text);
+  } else if (this.match("*")) {
+    // it's a block comment
+    while (!this.isAtEnd()) {
+      if (this.peek() === "*" && this.peekNext() === "/") {
+        this.advance();
+        this.advance();
+        break;
+      }
+      this.advance();
+    }
+    const text = this.src.slice(this.start, this.current);
+    if(this.src[this.current-1]!=='/' || this.src[this.current-2]!=='*') return this.makeToken(TokenType.BLOCK_COMMENT,text,{value:text,unterminated:true});
+    return this.makeToken(TokenType.BLOCK_COMMENT, text);
+  } else {
+    // normal slash or /=
+    return this.makeToken(this.match("=") ? TokenType.SLASH_EQUAL : TokenType.SLASH, this.src.slice(this.start, this.current));
+  }
       case "%": return this.makeToken(this.match("=") ? TokenType.PERCENT_EQUAL : TokenType.PERCENT, this.src.slice(this.start, this.current));
 
       // Comparison / equality

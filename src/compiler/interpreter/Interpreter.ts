@@ -322,7 +322,11 @@ private parse(source: string): ProgramNode {
         };
         if (n.target.type === NodeType.IDENTIFIER) {
           const name = (n.target as IdentifierNode).name;
-          const cur = getOrThrow(() => this.localEnv.getValue(name));
+          const cur = getOrThrow(
+  () => this.localEnv.getValue(name),
+  `Variable '${name}' not found during assignment`
+);
+
           const value = assignOp(cur, n.op, right);
           this.localEnv.assign(name, value);
           return value;
@@ -390,7 +394,7 @@ private parse(source: string): ProgramNode {
               throw new Error("Invalid operand for ++ operator");
             }
             const name = (n.right as IdentifierNode).name;
-            const cur = getOrThrow<number>(() => this.localEnv.getValue(name));
+            const cur = getOrThrow<number>( () => this.localEnv.getValue(name),`Variable '${name}' not found for ++`);
             this.localEnv.assign(name, cur + 1);
             return cur + 1;
           }
@@ -399,7 +403,7 @@ private parse(source: string): ProgramNode {
               throw new Error("Invalid operand for -- operator");
             }
             const name = (n.right as IdentifierNode).name;
-            const cur = getOrThrow<number>(() => this.localEnv.getValue(name));
+            const cur = getOrThrow<number>(() => this.localEnv.getValue(name),`Variable '${name}' not found for --`);
             this.localEnv.assign(name, cur - 1);
             return cur - 1;
           }
@@ -413,7 +417,7 @@ private parse(source: string): ProgramNode {
             throw new Error(`Invalid operand for ${n.operator} operator`);
           }
           const name = (n.operand as IdentifierNode).name;
-          const cur = getOrThrow<number>(() => this.localEnv.getValue(name));
+          const cur = getOrThrow<number>(() => this.localEnv.getValue(name), `Variable '${name}' not found for postfix ${n.operator}`);
           this.localEnv.assign(name, n.operator === TokenType.PLUS_PLUS ? cur + 1 : cur - 1);
         }else {
           throw new Error(`Unknown postfix operator ${n.operator}`);

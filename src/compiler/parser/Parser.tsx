@@ -5,7 +5,7 @@ import { TokenType, type Token } from "../lexer/tokens";
  * Grammar (modern core):
  *
  * program      -> declaration* EOF
- * declaration  -> varDecl | constDecl | funDecl | importDecl | exportDecl | statement
+ * declaration  -> varDecl | constDecl | funDecl | importDecl | exportDecl | statement | commentDecl
  * importDecl   -> "import" IDENT "from" STRING ";"
  * exportDecl   -> "export" (funDecl | varDecl | constDecl | IDENT ";")
  * varDecl      -> ("var" | "let") IDENT ("=" expression)? ";"
@@ -49,12 +49,19 @@ import { TokenType, type Token } from "../lexer/tokens";
 export class Parser{
   private tokens:Token[]
   private current=0
-  constructor(tokens:Token[]){
-    this.tokens = tokens.filter((token)=>token.type!=TokenType.WHITESPACE)
-  }
+  constructor(tokens: Token[]) {
+  this.tokens = tokens.filter(
+    (token) =>
+      token.type !== TokenType.WHITESPACE
+  );
+}
+
   parseProgram():ProgramNode{
     const body:ASTNode[]=[];
-    while(!this.isAtEnd())body.push(this.declaration());
+    while(!this.isAtEnd()){
+      const decl = this.declaration();
+      if(decl)body.push(decl);
+    }
     return {type:NodeType.PROGRAM,body};
   }
   // helpers
@@ -81,13 +88,14 @@ export class Parser{
        default: return {type: "AnyType"};
     }
   }
-  private declaration():ASTNode{
+  private declaration():ASTNode|null{
     if(this.matchTokens(TokenType.VAR))return this.varDecl("var");
     if(this.matchTokens(TokenType.LET))return this.varDecl("let");
     if(this.matchTokens(TokenType.CONST))return this.constDecl();
     if(this.matchTokens(TokenType.FUNCTION))return this.funcDecl(true);
     if(this.matchTokens(TokenType.IMPORT))return this.importDecl();
     if(this.matchTokens(TokenType.EXPORT))return this.exportDecl();
+    if(this.matchTokens(TokenType.BLOCK_COMMENT) || this.matchTokens(TokenType.LINE_COMMENT))return this.commentDecl();
     return this.statement();
   }
   private varDecl(kind:"let"|"var"):VarDeclNode{
@@ -237,8 +245,14 @@ private exportDecl(): ExportNode {
 
   throw new Error("Invalid export declaration");
 }
-
-  private statement():ASTNode{
+private commentDecl(){
+  const commentToken = this.previous();
+  if(commentToken && commentToken.literal && typeof(commentToken.literal)==="object" && "unterminated" in commentToken.literal){
+    if(commentToken.literal.unterminated===true)throw new Error(`Unterminated Comment Block at ${commentToken.line}:${commentToken.col}`)
+  }
+  return null
+}
+private statement():ASTNode{
     if (this.matchTokens(TokenType.PRINT)) return this.printStmt();
     if (this.matchTokens(TokenType.IF)) return this.ifStmt();
     if (this.matchTokens(TokenType.WHILE)) return this.whileStmt();
@@ -302,7 +316,10 @@ private exportDecl(): ExportNode {
   private block(): BlockNode {
     const body: ASTNode[] = [];
     this.matchWithError(TokenType.LEFT_BRACE, "Expected '{' to start block");
-    while (!this.match(TokenType.RIGHT_BRACE) && !this.isAtEnd()) body.push(this.declaration());
+    while (!this.match(TokenType.RIGHT_BRACE) && !this.isAtEnd()){
+      const decl = this.declaration();
+      if(decl)body.push(decl);
+    }
     this.matchWithError(TokenType.RIGHT_BRACE, "Expected '}' after block");
     return { type: NodeType.BLOCK, body };
   }

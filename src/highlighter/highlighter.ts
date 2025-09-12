@@ -91,6 +91,9 @@ function tokenClass(type: TokenType | "STRING_ERROR"): string {
     case TokenType.OR_OR:
       return "tok-operator";
     case TokenType.WHITESPACE: return "tok-whitespace";
+    case TokenType.LINE_COMMENT:
+    case TokenType.BLOCK_COMMENT:
+      return "tok-comment";
     default:
       return "tok-default";
   }
@@ -109,15 +112,72 @@ export function highlightCode(src: string): string {
       out += token.lexeme
         .replace(/ /g, "&nbsp;")
         .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;")
-        .replace(/\n/g, "<br/>");
-    }else if(token.type === TokenType.STRING && token.literal && typeof(token.literal)=="object" && "unterminated" in token.literal){
-        if(token.literal.unterminated == false) out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
-        else out += `<span class="tok-string-error">${escapeHtml(token.lexeme)}</span>`;
+        .replace(/\n/g, "<br/>&#8203;"); // fix for cursor issue
+    } 
+    // String with unterminated check
+    else if (
+  token.type === TokenType.STRING &&
+  token.literal &&
+  typeof token.literal === "object" &&
+  "unterminated" in token.literal
+) {
+  if (token.literal.unterminated === false) {
+    // Normal terminated string
+    out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
+  } else {
+    // Unterminated string → preserve spaces, tabs, newlines
+    let html = "";
+    for (const line of token.lexeme.split("\n")) {
+      const parts = line.split(/(\s+)/); // keep whitespace tokens
+      for (const part of parts) {
+        if (part.trim() === "") {
+          // whitespace
+          html += part
+            .replace(/ /g, "&nbsp;")
+            .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+        } else {
+          // actual word
+          html += `<span>${escapeHtml(part)}</span>`;
+        }
+      }
+      html += "<br/>";
     }
-     else {
-      out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
-    }
+    out += `<span class="tok-string-error">${html}</span>`;
   }
+}
 
-  return out;
+    else if (
+  token.type === TokenType.BLOCK_COMMENT &&
+  token.literal &&
+  typeof token.literal === "object" &&
+  "unterminated" in token.literal
+) {
+  if (token.literal.unterminated === true) {
+    // Properly terminated block comment
+    let html = "";
+    for (const line of token.lexeme.split("\n")) {
+      const parts = line.split(/(\s+)/); // split and keep whitespace
+      for (const part of parts) {
+        if (part.trim() === "") {
+          // whitespace
+          html += part
+            .replace(/ /g, "&nbsp;")
+            .replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+        } else {
+          // actual word
+          html += `<span>${escapeHtml(part)}</span>`;
+        }
+      }
+      html += "<br/>";
+    }
+    out += `<span class="tok-block-comment-error">${html}</span>`;
+  } else {
+    out += `<span class="tok-comment">${token.lexeme}</span>`;
+  }
+}
+ else{
+    out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
+  }
+}
+return out;
 }

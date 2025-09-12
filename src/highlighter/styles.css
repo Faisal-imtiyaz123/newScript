@@ -51,6 +51,7 @@
 
 /* Strings */
 .tok-string { color: #CE9178; }
+
 .tok-string-error { background-color: #511; color: #f99; }
 
 /* Numbers */
@@ -78,5 +79,12 @@
 .tok-operator { color: #D4D4D4; }
 /* WhiteSpace */
 .tok-whitespace { white-space: pre; }
+
+.tok-comment {
+  color: #6a9955; /* VSCode-style green */
+  font-style: italic;
+  white-space: pre-wrap;
+}
+.tok-block-comment-error { background-color: #511; color: #f99;}
 /* Default */
 .tok-default { color: #D4D4D4; }

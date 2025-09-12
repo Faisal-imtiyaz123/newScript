@@ -71,6 +71,9 @@ export enum TokenType {
   DEFAULT="DEFAULT",
   //WhiteSpace
   WHITESPACE = "WHITESPACE",
+  //Comments
+  LINE_COMMENT = "LINE_COMMENT",
+  BLOCK_COMMENT = "BLOCK_COMMENT",
   // End of file
   EOF = "EOF",
 }

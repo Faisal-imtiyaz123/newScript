@@ -4,10 +4,92 @@ import { runSource } from "./compiler";
 import { highlightCode } from "./highlighter/highlighter";
 import "./highlighter/styles.css";
 
-const SAMPLE = `// try typing
-loyal x = 10;
-say(x);
-`;
+const SAMPLE = `// newLang Example Programs
+// Explore syntax, types, functions, and control flow
+
+// === Variables ===
+var w = 5;
+let x = 10;
+const y = 0;
+loyal z = 0;   // loyal a = 0 is same as writing const a = 0
+
+say("x = " + w); // say is same as print
+print("y = " + x);
+say("pi = " + y);
+
+// === Types ===
+var a: number = 42;
+let b: string = "hello world";
+const c: boolean = true;
+loyal d: any = "can change type later";
+
+say(a);
+print(b);
+say(c);
+print(d);
+
+// === Operators ===
+var sum = a plus 10; // for add can use both plus and +
+var diff = a minus 5; // for minus can use both - and minus
+var prod = a into 2; // for multiplying can use both * and into
+var quotient = a by 2; // for division can use both by and /
+var compGre = a isgre 20; // for comparision can use both isgre and >
+var compLess = a isless 20; // for comparision can use both isless and <
+
+say("sum = " + sum);
+say("diff = " + diff);
+say("prod = " + prod);
+say("quotient = " + quotient);
+say("a > 20 --> " + compGre);
+say("a < 20 --> " + compLess);
+
+// === Functions ===
+// to make a function write declare
+// to return write emit
+declare add(n1: number, n2: number): number { 
+  emit n1 plus n2;
+}
+
+declare greet(name: string): string {
+  emit "Hello, " + name;
+}
+
+say(add(7, 8));
+say(greet("newLang"));
+
+// === Conditionals ===
+if (a isgre 40) {
+  say("a is greater than 40");
+} else {
+  say("a is less or equal to 40");
+}
+
+// === Loops ===
+var counter = 0;
+while (counter isless 5) {
+  say("counter = " + counter);
+  counter = counter plus 1;
+}
+
+// === For Loop ===
+for (var i = 0; i isless 3; i++) {
+  say("i = " + i);
+}
+
+// === Post Fix ===
+let myvar = 2;
+myvar+=2;
+say(myvar + " myvar+=2");
+myvar-=2;
+say(myvar + " mvyar-=2");
+myvar*=2;
+say(myvar + " mvyar*=2");
+myvar/=2;
+say(myvar + " mvyar/=2");
+
+// === End of Examples ===
+ `
+
 
 export default function App() {
   const [code, setCode] = useState(SAMPLE);
