@@ -5,8 +5,12 @@
 /* Strings */
 .tok-string { color: #CE9178; }
 
-.tok-string-error { background-color: #511; color: #f99; }
-
+.tok-string-error {
+  text-decoration: underline wavy red;
+  text-decoration-thickness: 1px; /* optional: make the wave thicker */
+  text-underline-offset: 3px;     /* optional: push it a bit lower */
+  color: #CE9178;
+}
 /* Numbers */
 .tok-number { color: #B5CEA8; }
 
@@ -38,6 +42,11 @@
   font-style: italic;
   white-space: pre-wrap;
 }
-.tok-block-comment-error { background-color: #511; color: #f99;}
+.tok-block-comment-error { 
+  text-decoration: underline wavy red;
+  text-decoration-thickness: 1px; /* optional: make the wave thicker */
+  text-underline-offset: 3px;     /* optional: push it a bit lower */
+  color: #fff;
+}
 /* Default */
 .tok-default { color: #D4D4D4; }
