@@ -179,5 +179,5 @@ export function highlightCode(src: string): string {
     out += `<span class="${cls}">${escapeHtml(token.lexeme)}</span>`;
   }
 }
-return out;
+return  out;
 }

@@ -1,8 +1,9 @@
 // App.tsx
 import { useState, useRef, useMemo, useEffect } from "react";
 import { runSource } from "./compiler";
+import "./App.css";
+import "../src/highlighter/styles.css"
 import { highlightCode } from "./highlighter/highlighter";
-import "./highlighter/styles.css";
 
 const SAMPLE = `// newScript Example Programs
 // Explore syntax, types, functions, and control flow
@@ -97,9 +98,14 @@ export default function App() {
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const preRef = useRef<HTMLPreElement | null>(null);
-
+  const lineNumbersRef = useRef<HTMLDivElement | null>(null);
   const highlighted = useMemo(() => highlightCode(code), [code]);
-
+  const lineNumbers = useMemo(()=>{
+    const lines = code.split("\n").length
+    const arr=[];
+    for(let i=0;i<lines;i++)arr.push(i+1);
+    return arr;
+  },[code])
   const handleRun = () => {
     setOutput([]);
     try {
@@ -112,9 +118,10 @@ export default function App() {
 
   // Sync scroll positions
   const onScroll = () => {
-    if (!textareaRef.current || !preRef.current) return;
+    if (!textareaRef.current || !preRef.current || !lineNumbersRef.current) return;
     preRef.current.scrollTop = textareaRef.current.scrollTop;
     preRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
   };
 
   // Keep scroll synced on content change
@@ -125,9 +132,19 @@ export default function App() {
   }, [highlighted]);
 
   return (
-    <div style={{ display: "flex", gap: 16, padding: 16, height: "100vh", boxSizing: "border-box" }}>
+    <div style={{ display: "flex", gap: 16, padding: 16, boxSizing: "border-box" }}>
       <div style={{ width:"100vw", display: "flex", flexDirection: "column", minHeight: 0,position:"relative" }}>
         <h2 style={{ margin: 0, marginBottom: 8 }}>newScript Editor</h2>
+      <div style={{height:"100vh",display:"flex"}}>
+        <div ref={lineNumbersRef} className="line-numbers">
+          {
+            lineNumbers.map((lineNum)=> 
+              <span key={lineNum} >
+                {lineNum}
+              </span>
+            )
+          }
+        </div>
         <div className="editor-container">
           <pre
             ref={preRef}
@@ -143,6 +160,7 @@ export default function App() {
             onChange={(e) => setCode(e.target.value)}
             onScroll={onScroll}
           />
+        </div>
         </div>
         <button
           onClick={handleRun}
