@@ -95,7 +95,6 @@ say(myvar + " mvyar/=2");
 export default function App() {
   const [code, setCode] = useState(SAMPLE);
   const [output, setOutput] = useState<string[]>([]);
-
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const preRef = useRef<HTMLPreElement | null>(null);
   const lineNumbersRef = useRef<HTMLDivElement | null>(null);
