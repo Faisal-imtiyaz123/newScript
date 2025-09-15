@@ -105,7 +105,7 @@ export class Parser{
     let initializer:ASTNode|undefined;
     if(this.matchTokens(TokenType.EQUAL))initializer = this.expression()
     if(initializer!==undefined && varType===undefined)varType = this.inferType(initializer);
-    this.matchWithError(TokenType.SEMICOLON, "Expected ';' after variable declaration");
+    this.matchWithError(TokenType.SEMICOLON, `Expected ';' after variable declaration at ${this.peek().line}:${this.peek().col}`);
     return { type:NodeType.VAR_DECL_NODE, kind, name: { type: NodeType.IDENTIFIER, name: identifier.lexeme }, varType, initializer };
   }
   private constDecl():ConstDeclNode{
@@ -115,7 +115,7 @@ export class Parser{
     this.matchWithError(TokenType.EQUAL,"Expected equal sign after constant name")
     const initializer = this.expression()
     if(constType==undefined)constType=this.inferType(initializer)
-    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon at ${this.peek().line}:${this.peek().col}`)
+    this.matchWithError(TokenType.SEMICOLON,`Expected ';' after const declaration at ${this.peek().line}:${this.peek().col} `)
     return {type:NodeType.CONST_DECL_NODE,name:{type:NodeType.IDENTIFIER,name:identifier.lexeme},varType:constType,initializer}
   }
   private funcDecl(named:boolean):FunctionDeclNode{
