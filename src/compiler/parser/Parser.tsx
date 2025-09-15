@@ -71,7 +71,7 @@ export class Parser{
   private advance(): Token { if (!this.isAtEnd()) this.current++; return this.previous(); }
   private match(type: TokenType): boolean { return !this.isAtEnd() && this.peek().type === type; }
   private matchTokens(...types: TokenType[]): boolean { for (const t of types) { if (this.match(t)) { this.advance(); return true; } } return false; }
-  private matchWithError(type: TokenType, msg: string): Token { if (this.match(type)) return this.advance(); throw new Error(`${msg} at '${this.peek().lexeme}'`); }
+  private matchWithError(type: TokenType, msg: string): Token { if (this.match(type)) return this.advance(); throw new Error(msg); }
   private parseTypeAnnotation(): TypeAnnotation {
   if (this.matchTokens(TokenType.NUMBER_TYPE)) return { type: "NumberType" };
   if (this.matchTokens(TokenType.STRING_TYPE)) return { type: "StringType" };
@@ -115,7 +115,7 @@ export class Parser{
     this.matchWithError(TokenType.EQUAL,"Expected equal sign after constant name")
     const initializer = this.expression()
     if(constType==undefined)constType=this.inferType(initializer)
-    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon after ${this.peek().line}:${this.peek().col}`)
+    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon at ${this.peek().line}:${this.peek().col}`)
     return {type:NodeType.CONST_DECL_NODE,name:{type:NodeType.IDENTIFIER,name:identifier.lexeme},varType:constType,initializer}
   }
   private funcDecl(named:boolean):FunctionDeclNode{
@@ -271,7 +271,7 @@ private statement():ASTNode{
   }
   private printStmt():PrintNode{
     const expr = this.expression();
-    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon after ${this.peek().line}:${this.peek().col}`)
+    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon at ${this.peek().line}:${this.peek().col}`)
     return {type:NodeType.PRINT_NODE,expression:expr}
   }
   private ifStmt():IfNode{
@@ -306,7 +306,7 @@ private statement():ASTNode{
     }
     let condition:ASTNode|undefined;
     if(!this.match(TokenType.SEMICOLON))condition = this.expression()
-    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon after ${this.peek().line}:${this.peek().col}`)
+    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon at ${this.peek().line}:${this.peek().col}`)
     let update:ASTNode|undefined
     if(!this.match(TokenType.RIGHT_PAREN))update = this.expression()
     this.matchWithError(TokenType.RIGHT_PAREN, "Expected ')' after for clauses" )
@@ -325,7 +325,7 @@ private statement():ASTNode{
   }
   private exprStmt():ExprStmtNode{
     const expr = this.expression()
-    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon after ${this.peek().line}:${this.peek().col}`)
+    this.matchWithError(TokenType.SEMICOLON,`Expected Semicolon at ${this.peek().line}:${this.peek().col}`)
     return {type:NodeType.EXPR_STATEMENT,expression:expr}
   }
   private expression():ASTNode{ return this.assignment()}
@@ -345,7 +345,7 @@ private statement():ASTNode{
     const condition = this.logicOr();
     if(this.matchTokens(TokenType.QUESTION)){
         const trueExpr = this.expression()
-        this.matchWithError(TokenType.COLON,`Expected Semicolon after ${this.peek().line}:${this.peek().col}`)
+        this.matchWithError(TokenType.COLON,`Expected Semicolon at ${this.peek().line}:${this.peek().col}`)
         const elseExpr = this.expression()
         return {type:NodeType.TERNARY,condition,trueBracnh:trueExpr,falseBranch:elseExpr}
     }
